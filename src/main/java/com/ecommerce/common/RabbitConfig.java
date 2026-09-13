@@ -6,24 +6,14 @@ import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Constantes de topologia do RabbitMQ e utilitário de conexão.
- *
- * Exchange eCommerce (direct)  -> pedidos, estoque, pagamento, entrega
- * Exchange Promoções  (topic)  -> notificações de promoções
- *
- * Nenhuma exchange fanout é utilizada, conforme exigido no enunciado.
- */
 public final class RabbitConfig {
 
     private RabbitConfig() {
     }
 
-    // ---- Exchanges ----
     public static final String EXCHANGE_ECOMMERCE = "eCommerce";
     public static final String EXCHANGE_PROMOCOES = "Promoções";
 
-    // ---- Filas (uma por consumidor, conforme exigido) ----
     public static final String FILA_PRINCIPAL = "fila.principal";
     public static final String FILA_ESTOQUE = "fila.estoque";
     public static final String FILA_PAGAMENTO = "fila.pagamento";
@@ -31,7 +21,6 @@ public final class RabbitConfig {
     public static final String FILA_C1 = "fila.c1";
     public static final String FILA_C2 = "fila.c2";
 
-    // ---- Routing keys (exchange eCommerce - direct) ----
     public static final String RK_PEDIDO_CRIADO = "pedido.criado";
     public static final String RK_PEDIDO_EXCLUIDO = "pedido.excluido";
     public static final String RK_PEDIDO_ESTOQUE_OK = "pedido.estoque_ok";
@@ -40,14 +29,12 @@ public final class RabbitConfig {
     public static final String RK_PAGAMENTO_RECUSADO = "pagamento.recusado";
     public static final String RK_PEDIDO_ENVIADO = "pedido.enviado";
 
-    // ---- Routing keys (exchange Promoções - topic) ----
     private static final String PREFIXO_PROMOCAO = "promocao.categoria.";
     public static String rkPromocaoCategoria(String categoria) {
         return PREFIXO_PROMOCAO + categoria;
     }
     public static final String BK_PROMOCAO_C2_TODAS = "promocao.categoria.*";
 
-    // ---- Nomes dos microsserviços (usados como identidade nas assinaturas) ----
     public static final String MS_PRINCIPAL = "principal";
     public static final String MS_ESTOQUE = "estoque";
     public static final String MS_PAGAMENTO = "pagamento";
@@ -56,15 +43,9 @@ public final class RabbitConfig {
 
     public static final String[] MICROSSERVICOS = {MS_PRINCIPAL, MS_ESTOQUE, MS_PAGAMENTO, MS_ENTREGA, MS_PROMOCOES};
 
-    // ---- Consumidores de promoções (não são microsserviços e não publicam eventos) ----
     public static final String CONSUMIDOR_C1 = "consumidor-c1";
     public static final String CONSUMIDOR_C2 = "consumidor-c2";
 
-    /**
-     * Microsserviço responsável por publicar cada routing key. Usado na
-     * validação: um evento só é aceito se foi assinado pelo seu produtor.
-     * Retorna null para routing keys desconhecidas.
-     */
     public static String produtorAutorizado(String routingKey) {
         if (routingKey == null) {
             return null;

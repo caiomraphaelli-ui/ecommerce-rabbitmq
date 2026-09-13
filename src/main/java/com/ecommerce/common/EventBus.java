@@ -10,13 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
-/**
- * Camada fina sobre o Channel do RabbitMQ que cuida de:
- *  - montar o Envelope, gerar o hash/assinatura digital e publicar;
- *  - receber uma entrega (Delivery), validar o evento (produtor autorizado e
- *    assinatura digital) e devolver o payload já desserializado — ou marcá-lo
- *    como inválido, caso em que o evento deve ser descartado.
- */
 public final class EventBus {
 
     private static final Gson GSON = new Gson();
@@ -24,7 +17,6 @@ public final class EventBus {
     private EventBus() {
     }
 
-    /** Publica um evento assinado digitalmente com a chave privada do produtor. */
     public static void publicar(Channel channel, String exchange, String routingKey,
                                  String producerName, Object payloadObj, PrivateKey chavePrivada) throws IOException {
         String payloadJson = GSON.toJson(payloadObj);
@@ -43,10 +35,9 @@ public final class EventBus {
         );
     }
 
-    /** Resultado da validação/leitura de um evento recebido. */
     public static class EventoRecebido<T> {
         public final boolean valido;
-        public final String motivo;   // motivo da rejeição (null se válido)
+        public final String motivo;
         public final Envelope envelope;
         public final T payload;
 
@@ -62,14 +53,6 @@ public final class EventBus {
         return new EventoRecebido<>(false, motivo, envelope, null);
     }
 
-    /**
-     * Lê o envelope de uma entrega e o valida:
-     *  1. o envelope precisa corresponder à exchange/routing key da entrega;
-     *  2. o produtor indicado precisa ser o responsável por aquele evento;
-     *  3. obtém a chave pública do produtor e verifica a assinatura digital.
-     * Só então desserializa o payload. Se qualquer etapa falhar, valido = false
-     * e o chamador deve descartar o evento.
-     */
     public static <T> EventoRecebido<T> receber(Delivery delivery, KeyStoreManager keyStoreManager, Class<T> payloadClass) {
         Envelope envelope;
         try {

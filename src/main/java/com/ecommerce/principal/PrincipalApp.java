@@ -7,15 +7,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Microsserviço Principal.
- *
- * Responsável pela interação com o usuário via terminal (visualizar produtos,
- * realizar pedidos, excluir pedidos, consultar pedidos/status) e por publicar
- * o evento pedido.criado. Consome os eventos que afetam o status dos pedidos
- * e publica pedido.excluido quando o estoque está indisponível ou o pagamento
- * é recusado.
- */
 public class PrincipalApp extends ProcessoMensageria {
 
     private final Map<String, Pedido> pedidos = new ConcurrentHashMap<>();
@@ -42,8 +33,6 @@ public class PrincipalApp extends ProcessoMensageria {
 
         consumir(RabbitConfig.FILA_PRINCIPAL);
     }
-
-    // -------------------- Tratadores dos eventos consumidos --------------------
 
     private void aoConfirmarEstoque(Payloads.PedidoEstoqueOk evento) {
         Pedido p = pedidos.get(evento.pedidoId);
@@ -94,7 +83,6 @@ public class PrincipalApp extends ProcessoMensageria {
         avisar("Pedido " + p.id + ": enviado! Nota fiscal: " + evento.numeroNota);
     }
 
-    /** Mostra a notificação sem atrapalhar muito o menu que está esperando entrada do usuário. */
     private void avisar(String mensagem) {
         System.out.println("\n[Principal] " + mensagem);
         System.out.print("\n> ");
@@ -104,8 +92,6 @@ public class PrincipalApp extends ProcessoMensageria {
         publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_EXCLUIDO,
                 new Payloads.PedidoExcluido(pedidoId, motivo));
     }
-
-    // -------------------- Menu / interação com o usuário --------------------
 
     public void executarMenu() {
         Scanner scanner = new Scanner(System.in);

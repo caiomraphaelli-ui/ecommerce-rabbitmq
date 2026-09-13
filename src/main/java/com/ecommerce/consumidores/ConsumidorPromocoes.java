@@ -3,15 +3,6 @@ package com.ecommerce.consumidores;
 import com.ecommerce.common.*;
 import com.rabbitmq.client.BuiltinExchangeType;
 
-/**
- * Lógica comum dos consumidores de promoções. Cada consumidor cria sua própria
- * fila, associa-a à exchange Promoções com as binding keys das categorias de
- * interesse e exibe as promoções recebidas.
- *
- * Esses processos não realizam chamadas aos microsserviços: apenas consomem
- * eventos de promoções do RabbitMQ (e não publicam nada, por isso não têm
- * chave privada).
- */
 public abstract class ConsumidorPromocoes extends ProcessoMensageria {
 
     private final String fila;

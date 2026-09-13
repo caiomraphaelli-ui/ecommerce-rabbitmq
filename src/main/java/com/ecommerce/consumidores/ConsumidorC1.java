@@ -2,12 +2,6 @@ package com.ecommerce.consumidores;
 
 import com.ecommerce.common.RabbitConfig;
 
-/**
- * Consumidor de Promoções C1.
- *
- * Registra interesse apenas nas categorias de produtos A e B, fazendo o bind
- * da sua fila nas routing keys promocao.categoria.A e promocao.categoria.B.
- */
 public class ConsumidorC1 extends ConsumidorPromocoes {
 
     public ConsumidorC1() throws Exception {

@@ -10,18 +10,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-/**
- * Utilitário de criptografia assimétrica (RSA) responsável por:
- *  1) gerar pares de chaves;
- *  2) gerar o hash SHA-256 do conteúdo do evento;
- *  3) assinar esse hash com a chave privada do microsserviço produtor;
- *  4) verificar a assinatura com a chave pública do produtor.
- *
- * A assinatura segue o padrão RSA PKCS#1 v1.5 (RFC 8017): o hash é embrulhado
- * na estrutura DigestInfo (que identifica o algoritmo SHA-256) e cifrado com a
- * chave privada. O resultado é idêntico ao do algoritmo SHA256withRSA, mas com
- * as etapas "gerar hash" e "assinar" explícitas no código.
- */
 public final class CryptoUtils {
 
     private static final String ALGORITMO_CHAVE = "RSA";
@@ -29,7 +17,7 @@ public final class CryptoUtils {
     private static final String TRANSFORMACAO_RSA = "RSA/ECB/PKCS1Padding";
     private static final int TAMANHO_CHAVE = 2048;
 
-    /** Cabeçalho DER do DigestInfo para SHA-256 (RFC 8017, seção 9.2). */
+    // Cabeçalho DER do DigestInfo para SHA-256 (RFC 8017, seção 9.2)
     private static final byte[] DIGEST_INFO_SHA256 = {
             0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte) 0x86, 0x48, 0x01,
             0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20
@@ -44,7 +32,6 @@ public final class CryptoUtils {
         return generator.generateKeyPair();
     }
 
-    /** Etapa 1: gera o hash SHA-256 do conteúdo do evento. */
     public static byte[] gerarHash(String conteudo) {
         try {
             return MessageDigest.getInstance(ALGORITMO_HASH).digest(conteudo.getBytes(StandardCharsets.UTF_8));
@@ -53,11 +40,6 @@ public final class CryptoUtils {
         }
     }
 
-    /**
-     * Etapa 2: gera o hash do conteúdo e o assina com a chave privada.
-     * Retorna a assinatura digital em Base64, pronta para ir no campo
-     * "Signature" do envelope.
-     */
     public static String assinar(String conteudo, PrivateKey chavePrivada) {
         try {
             byte[] hash = gerarHash(conteudo);
@@ -70,13 +52,6 @@ public final class CryptoUtils {
         }
     }
 
-    /**
-     * Verifica a assinatura digital de um conteúdo usando a chave pública do
-     * microsserviço produtor: recupera o hash assinado e compara com o hash
-     * recalculado sobre o conteúdo recebido. Confirma autenticidade (foi
-     * realmente o produtor que assinou) e integridade (o conteúdo não foi
-     * alterado). Qualquer entrada ausente ou malformada resulta em false.
-     */
     public static boolean verificar(String conteudo, String assinaturaBase64, PublicKey chavePublica) {
         if (conteudo == null || assinaturaBase64 == null || chavePublica == null) {
             return false;
@@ -98,8 +73,6 @@ public final class CryptoUtils {
         System.arraycopy(hash, 0, resultado, DIGEST_INFO_SHA256.length, hash.length);
         return resultado;
     }
-
-    // ---------------- Persistência das chaves em arquivos PEM simples ----------------
 
     public static void salvarChavePrivada(PrivateKey chave, Path caminho) throws IOException {
         String pem = envolverPem(Base64.getEncoder().encodeToString(chave.getEncoded()), "PRIVATE KEY");

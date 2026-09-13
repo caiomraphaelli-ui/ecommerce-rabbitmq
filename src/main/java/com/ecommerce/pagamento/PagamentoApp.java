@@ -6,12 +6,6 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Microsserviço Pagamento.
- *
- * Consome pedido.estoque_ok e simula o processamento do pagamento usando uma
- * variável aleatória. Publica pagamento.aprovado ou pagamento.recusado.
- */
 public class PagamentoApp extends ProcessoMensageria {
 
     private static final double PROBABILIDADE_APROVACAO = 0.7;

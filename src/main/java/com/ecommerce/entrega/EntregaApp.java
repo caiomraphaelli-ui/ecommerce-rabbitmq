@@ -6,12 +6,6 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import java.io.IOException;
 import java.util.UUID;
 
-/**
- * Microsserviço Entrega.
- *
- * Consome pagamento.aprovado, simula a emissão da nota fiscal e a preparação
- * da entrega, e publica pedido.enviado.
- */
 public class EntregaApp extends ProcessoMensageria {
 
     public EntregaApp() throws Exception {

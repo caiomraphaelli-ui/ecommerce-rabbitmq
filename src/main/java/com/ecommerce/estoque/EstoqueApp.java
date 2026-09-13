@@ -8,15 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Microsserviço Estoque.
- *
- * Consome pedido.criado e pedido.excluido. Ao receber pedido.criado, verifica
- * a disponibilidade dos produtos; se disponíveis, reserva/baixa do estoque e
- * publica pedido.estoque_ok; caso contrário publica estoque.indisponivel.
- * Ao receber pedido.excluido, devolve ao estoque os produtos que haviam sido
- * reservados para aquele pedido (se houver reserva).
- */
 public class EstoqueApp extends ProcessoMensageria {
 
     private final Map<Integer, Integer> estoque = new ConcurrentHashMap<>();

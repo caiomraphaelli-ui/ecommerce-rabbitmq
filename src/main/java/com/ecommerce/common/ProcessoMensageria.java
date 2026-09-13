@@ -10,19 +10,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Classe base de todos os processos do sistema (os 5 microsserviços e os
- * consumidores de promoções). Concentra o que é igual em todos eles:
- *  - conexão com o RabbitMQ e carregamento das chaves;
- *  - declaração de exchanges e filas;
- *  - publicação de eventos assinados;
- *  - consumo de uma fila: cada evento é validado (EventBus.receber), os
- *    inválidos são descartados e os válidos vão para o TratadorEvento
- *    registrado para a routing key.
- *
- * Cada subclasse implementa iniciar(), onde declara sua topologia e registra
- * os tratadores dos eventos que consome.
- */
 public abstract class ProcessoMensageria {
 
     protected final String nome;
@@ -33,11 +20,6 @@ public abstract class ProcessoMensageria {
     private final Object lockPublicacao = new Object();
     private final Map<String, Registro<?>> tratadores = new LinkedHashMap<>();
 
-    /**
-     * @param nome           nome exibido nos logs
-     * @param identificador  pasta de chaves em keys/ e nome de produtor nos eventos
-     * @param publicaEventos true se o processo publica eventos (carrega a chave privada)
-     */
     protected ProcessoMensageria(String nome, String identificador, boolean publicaEventos) throws Exception {
         this.nome = nome;
         this.identificador = identificador;
@@ -46,14 +28,12 @@ public abstract class ProcessoMensageria {
         this.keys = new KeyStoreManager(identificador, publicaEventos);
     }
 
-    /** Declara a topologia, registra os tratadores e começa a trabalhar. */
     public abstract void iniciar() throws Exception;
 
     protected void declararExchange(String exchange, BuiltinExchangeType tipo) throws IOException {
         channel.exchangeDeclare(exchange, tipo, true);
     }
 
-    /** Declara uma fila durável e a associa à exchange com cada binding key. */
     protected void declararFila(String exchange, String fila, String... bindingKeys) throws IOException {
         channel.queueDeclare(fila, true, false, false, null);
         for (String bindingKey : bindingKeys) {
@@ -61,22 +41,16 @@ public abstract class ProcessoMensageria {
         }
     }
 
-    /**
-     * Registra o tratador de um evento. A binding key pode ser uma routing key
-     * exata ("pedido.criado") ou um padrão com '*' ("promocao.categoria.*").
-     */
     protected <T> void registrarTratador(String bindingKey, Class<T> tipoPayload, TratadorEvento<T> tratador) {
         tratadores.put(bindingKey, new Registro<>(tipoPayload, tratador));
     }
 
-    /** Publica um evento assinado com a chave privada deste processo. */
     protected void publicar(String exchange, String routingKey, Object payload) throws IOException {
         synchronized (lockPublicacao) {
             EventBus.publicar(channel, exchange, routingKey, identificador, payload, keys.getChavePrivadaPropria());
         }
     }
 
-    /** Começa a consumir a fila, um evento por vez, confirmando (ack) cada um após o processamento. */
     protected void consumir(String fila) throws IOException {
         Channel canalConsumo = connection.createChannel();
         canalConsumo.basicQos(1);
@@ -115,7 +89,7 @@ public abstract class ProcessoMensageria {
         return null;
     }
 
-    /** Mesma regra do RabbitMQ para binding keys de exchanges topic: '*' vale exatamente uma palavra. */
+    // '*' vale exatamente uma palavra, igual às binding keys de exchanges topic do RabbitMQ
     private static boolean combina(String bindingKey, String routingKey) {
         String[] padrao = bindingKey.split("\\.");
         String[] palavras = routingKey.split("\\.");
@@ -130,7 +104,6 @@ public abstract class ProcessoMensageria {
         return true;
     }
 
-    /** Associa o tipo do payload ao tratador, para desserializar o evento com a classe certa. */
     private class Registro<T> {
         private final Class<T> tipoPayload;
         private final TratadorEvento<T> tratador;
