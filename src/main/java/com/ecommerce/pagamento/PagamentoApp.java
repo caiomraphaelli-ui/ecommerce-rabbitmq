@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class PagamentoApp extends ProcessoMensageria {
 
-    private static final double PROBABILIDADE_APROVACAO = 0.7; // 70% de chance de aprovar
+    private static final double PROBABILIDADE_APROVACAO = 0.7;
 
     public PagamentoApp() throws Exception {
         super("Pagamento", RabbitConfig.MS_PAGAMENTO, true);
@@ -36,7 +36,6 @@ public class PagamentoApp extends ProcessoMensageria {
         double valor = pedido.valorTotal;
         log("Processando pagamento do pedido " + pedidoId + " (R$ " + String.format("%.2f", valor) + ")...");
 
-        // Simulação com número pseudoaleatório
         boolean aprovado = ThreadLocalRandom.current().nextDouble() < PROBABILIDADE_APROVACAO;
 
         if (aprovado) {

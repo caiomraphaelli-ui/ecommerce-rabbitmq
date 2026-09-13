@@ -25,8 +25,8 @@ import java.util.Map;
  */
 public abstract class ProcessoMensageria {
 
-    protected final String nome;          // nome exibido nos logs, ex.: "Estoque"
-    private final String identificador;   // nome usado nas chaves e como producer, ex.: "estoque"
+    protected final String nome;
+    private final String identificador;
     private final Connection connection;
     private final Channel channel;
     private final KeyStoreManager keys;

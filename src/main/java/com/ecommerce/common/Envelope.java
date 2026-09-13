@@ -19,12 +19,12 @@ public class Envelope {
     public String eventId;
     public String exchange;
     public String routingKey;
-    public String producer;   // nome do microsserviço que publicou o evento
+    public String producer;
     public long timestamp;
-    public String payload;    // JSON do payload específico do evento (string bruta)
+    public String payload;
 
     @SerializedName("Signature")
-    public String signature;  // assinatura digital (Base64) sobre conteudoAssinado()
+    public String signature;
 
     public Envelope() {
     }
