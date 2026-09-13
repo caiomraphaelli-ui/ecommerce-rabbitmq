@@ -32,6 +32,7 @@ public final class CryptoUtils {
         return generator.generateKeyPair();
     }
 
+    /** Etapa 1: gera o hash SHA-256 do conteúdo do evento. */
     public static byte[] gerarHash(String conteudo) {
         try {
             return MessageDigest.getInstance(ALGORITMO_HASH).digest(conteudo.getBytes(StandardCharsets.UTF_8));
@@ -40,6 +41,11 @@ public final class CryptoUtils {
         }
     }
 
+    /**
+     * Etapa 2: gera o hash do conteúdo e o assina com a chave privada.
+     * Retorna a assinatura digital em Base64, pronta para ir no campo
+     * "Signature" do envelope.
+     */
     public static String assinar(String conteudo, PrivateKey chavePrivada) {
         try {
             byte[] hash = gerarHash(conteudo);
@@ -52,6 +58,13 @@ public final class CryptoUtils {
         }
     }
 
+    /**
+     * Verifica a assinatura digital de um conteúdo usando a chave pública do
+     * microsserviço produtor: recupera o hash assinado e compara com o hash
+     * recalculado sobre o conteúdo recebido. Confirma autenticidade (foi
+     * realmente o produtor que assinou) e integridade (o conteúdo não foi
+     * alterado). Qualquer entrada ausente ou malformada resulta em false.
+     */
     public static boolean verificar(String conteudo, String assinaturaBase64, PublicKey chavePublica) {
         if (conteudo == null || assinaturaBase64 == null || chavePublica == null) {
             return false;

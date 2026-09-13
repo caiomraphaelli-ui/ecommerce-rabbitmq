@@ -20,6 +20,11 @@ public abstract class ProcessoMensageria {
     private final Object lockPublicacao = new Object();
     private final Map<String, Registro<?>> tratadores = new LinkedHashMap<>();
 
+    /**
+     * @param nome           nome exibido nos logs
+     * @param identificador  pasta de chaves em keys/ e nome de produtor nos eventos
+     * @param publicaEventos true se o processo publica eventos (carrega a chave privada)
+     */
     protected ProcessoMensageria(String nome, String identificador, boolean publicaEventos) throws Exception {
         this.nome = nome;
         this.identificador = identificador;
@@ -28,12 +33,14 @@ public abstract class ProcessoMensageria {
         this.keys = new KeyStoreManager(identificador, publicaEventos);
     }
 
+    /** Declara a topologia, registra os tratadores e começa a trabalhar. */
     public abstract void iniciar() throws Exception;
 
     protected void declararExchange(String exchange, BuiltinExchangeType tipo) throws IOException {
         channel.exchangeDeclare(exchange, tipo, true);
     }
 
+    /** Declara uma fila durável e a associa à exchange com cada binding key. */
     protected void declararFila(String exchange, String fila, String... bindingKeys) throws IOException {
         channel.queueDeclare(fila, true, false, false, null);
         for (String bindingKey : bindingKeys) {
@@ -41,16 +48,22 @@ public abstract class ProcessoMensageria {
         }
     }
 
+    /**
+     * Registra o tratador de um evento. A binding key pode ser uma routing key
+     * exata ("pedido.criado") ou um padrão com '*' ("promocao.categoria.*").
+     */
     protected <T> void registrarTratador(String bindingKey, Class<T> tipoPayload, TratadorEvento<T> tratador) {
         tratadores.put(bindingKey, new Registro<>(tipoPayload, tratador));
     }
 
+    /** Publica um evento assinado com a chave privada deste processo. */
     protected void publicar(String exchange, String routingKey, Object payload) throws IOException {
         synchronized (lockPublicacao) {
             EventBus.publicar(channel, exchange, routingKey, identificador, payload, keys.getChavePrivadaPropria());
         }
     }
 
+    /** Começa a consumir a fila, um evento por vez, confirmando (ack) cada um após o processamento. */
     protected void consumir(String fila) throws IOException {
         Channel canalConsumo = connection.createChannel();
         canalConsumo.basicQos(1);
@@ -104,6 +117,7 @@ public abstract class ProcessoMensageria {
         return true;
     }
 
+    /** Associa o tipo do payload ao tratador, para desserializar o evento com a classe certa. */
     private class Registro<T> {
         private final Class<T> tipoPayload;
         private final TratadorEvento<T> tratador;

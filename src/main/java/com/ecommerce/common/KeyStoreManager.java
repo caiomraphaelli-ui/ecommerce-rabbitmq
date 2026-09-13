@@ -16,6 +16,12 @@ public class KeyStoreManager {
     private final PrivateKey chavePrivadaPropria;
     private final Map<String, PublicKey> chavesPublicas = new HashMap<>();
 
+    /**
+     * @param processo       nome da pasta do processo em keys/ (ex.: "estoque",
+     *                       "consumidor-c1").
+     * @param publicaEventos true se o processo publica eventos e, portanto,
+     *                       precisa carregar sua chave privada.
+     */
     public KeyStoreManager(String processo, boolean publicaEventos) {
         Path pasta = pastaDe(processo);
         try {

@@ -17,6 +17,7 @@ public final class EventBus {
     private EventBus() {
     }
 
+    /** Publica um evento assinado digitalmente com a chave privada do produtor. */
     public static void publicar(Channel channel, String exchange, String routingKey,
                                  String producerName, Object payloadObj, PrivateKey chavePrivada) throws IOException {
         String payloadJson = GSON.toJson(payloadObj);
@@ -35,9 +36,10 @@ public final class EventBus {
         );
     }
 
+    /** Resultado da validação/leitura de um evento recebido. */
     public static class EventoRecebido<T> {
         public final boolean valido;
-        public final String motivo;
+        public final String motivo;   // motivo da rejeição (null se válido)
         public final Envelope envelope;
         public final T payload;
 
@@ -53,6 +55,14 @@ public final class EventBus {
         return new EventoRecebido<>(false, motivo, envelope, null);
     }
 
+    /**
+     * Lê o envelope de uma entrega e o valida:
+     *  1. o envelope precisa corresponder à exchange/routing key da entrega;
+     *  2. o produtor indicado precisa ser o responsável por aquele evento;
+     *  3. obtém a chave pública do produtor e verifica a assinatura digital.
+     * Só então desserializa o payload. Se qualquer etapa falhar, valido = false
+     * e o chamador deve descartar o evento.
+     */
     public static <T> EventoRecebido<T> receber(Delivery delivery, KeyStoreManager keyStoreManager, Class<T> payloadClass) {
         Envelope envelope;
         try {

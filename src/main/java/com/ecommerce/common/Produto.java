@@ -3,7 +3,7 @@ package com.ecommerce.common;
 public class Produto {
     public final int id;
     public final String nome;
-    public final String categoria;
+    public final String categoria; // "A", "B" ou "C"
     public final double preco;
 
     public Produto(int id, String nome, String categoria, double preco) {

@@ -46,6 +46,11 @@ public final class RabbitConfig {
     public static final String CONSUMIDOR_C1 = "consumidor-c1";
     public static final String CONSUMIDOR_C2 = "consumidor-c2";
 
+    /**
+     * Microsserviço responsável por publicar cada routing key. Usado na
+     * validação: um evento só é aceito se foi assinado pelo seu produtor.
+     * Retorna null para routing keys desconhecidas.
+     */
     public static String produtorAutorizado(String routingKey) {
         if (routingKey == null) {
             return null;

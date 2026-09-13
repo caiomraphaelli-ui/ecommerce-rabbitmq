@@ -83,6 +83,7 @@ public class PrincipalApp extends ProcessoMensageria {
         avisar("Pedido " + p.id + ": enviado! Nota fiscal: " + evento.numeroNota);
     }
 
+    /** Mostra a notificação sem atrapalhar muito o menu que está esperando entrada do usuário. */
     private void avisar(String mensagem) {
         System.out.println("\n[Principal] " + mensagem);
         System.out.print("\n> ");
