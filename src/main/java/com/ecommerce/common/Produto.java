@@ -1,8 +1,5 @@
 package com.ecommerce.common;
 
-/**
- * Representa um produto do catálogo do e-commerce.
- */
 public class Produto {
     public final int id;
     public final String nome;

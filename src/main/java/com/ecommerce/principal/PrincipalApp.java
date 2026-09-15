@@ -7,15 +7,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Microsserviço Principal.
- *
- * Responsável pela interação com o usuário via terminal (visualizar produtos,
- * realizar pedidos, excluir pedidos, consultar pedidos/status) e por publicar
- * o evento pedido.criado. Consome os eventos que afetam o status dos pedidos
- * e publica pedido.excluido quando o estoque está indisponível ou o pagamento
- * é recusado.
- */
 public class PrincipalApp extends ProcessoMensageria {
 
     private final Map<String, Pedido> pedidos = new ConcurrentHashMap<>();
@@ -43,14 +34,12 @@ public class PrincipalApp extends ProcessoMensageria {
         consumir(RabbitConfig.FILA_PRINCIPAL);
     }
 
-    // -------------------- Tratadores dos eventos consumidos --------------------
-
     private void aoConfirmarEstoque(Payloads.PedidoEstoqueOk evento) {
         Pedido p = pedidos.get(evento.pedidoId);
         if (p == null) {
             return;
         }
-        p.status = Pedido.Status.AGUARDANDO_PAGAMENTO;
+        p.status = PedidoStatus.AGUARDANDO_PAGAMENTO;
         p.valorTotal = evento.valorTotal;
         avisar("Pedido " + p.id + ": estoque confirmado, aguardando pagamento (R$ "
                 + String.format("%.2f", p.valorTotal) + ").");
@@ -61,7 +50,7 @@ public class PrincipalApp extends ProcessoMensageria {
         if (p == null) {
             return;
         }
-        p.status = Pedido.Status.CANCELADO_ESTOQUE;
+        p.status = PedidoStatus.CANCELADO_ESTOQUE;
         avisar("Pedido " + p.id + ": produto indisponível em estoque. Cancelando pedido...");
         publicarPedidoExcluido(p.id, "Produto indisponível em estoque");
     }
@@ -71,7 +60,7 @@ public class PrincipalApp extends ProcessoMensageria {
         if (p == null) {
             return;
         }
-        p.status = Pedido.Status.PAGAMENTO_APROVADO;
+        p.status = PedidoStatus.PAGAMENTO_APROVADO;
         avisar("Pedido " + p.id + ": pagamento aprovado!");
     }
 
@@ -80,7 +69,7 @@ public class PrincipalApp extends ProcessoMensageria {
         if (p == null) {
             return;
         }
-        p.status = Pedido.Status.CANCELADO_PAGAMENTO;
+        p.status = PedidoStatus.CANCELADO_PAGAMENTO;
         avisar("Pedido " + p.id + ": pagamento recusado. Cancelando pedido...");
         publicarPedidoExcluido(p.id, "Pagamento recusado");
     }
@@ -90,7 +79,7 @@ public class PrincipalApp extends ProcessoMensageria {
         if (p == null) {
             return;
         }
-        p.status = Pedido.Status.ENVIADO;
+        p.status = PedidoStatus.ENVIADO;
         avisar("Pedido " + p.id + ": enviado! Nota fiscal: " + evento.numeroNota);
     }
 
@@ -104,8 +93,6 @@ public class PrincipalApp extends ProcessoMensageria {
         publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_EXCLUIDO,
                 new Payloads.PedidoExcluido(pedidoId, motivo));
     }
-
-    // -------------------- Menu / interação com o usuário --------------------
 
     public void executarMenu() {
         Scanner scanner = new Scanner(System.in);
@@ -200,11 +187,11 @@ public class PrincipalApp extends ProcessoMensageria {
             System.out.println("Pedido não encontrado.");
             return;
         }
-        if (p.status == Pedido.Status.ENVIADO) {
+        if (p.status == PedidoStatus.ENVIADO) {
             System.out.println("Não é possível excluir um pedido já enviado.");
             return;
         }
-        p.status = Pedido.Status.EXCLUIDO_PELO_USUARIO;
+        p.status = PedidoStatus.EXCLUIDO_PELO_USUARIO;
         publicarPedidoExcluido(id, "Cancelado pelo usuário");
         System.out.println("Solicitação de exclusão do pedido " + id + " enviada.");
     }

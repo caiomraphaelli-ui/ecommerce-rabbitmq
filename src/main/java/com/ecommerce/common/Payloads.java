@@ -2,10 +2,6 @@ package com.ecommerce.common;
 
 import java.util.List;
 
-/**
- * DTOs (payloads) trocados nos eventos do sistema. Cada classe representa o
- * conteúdo publicado para uma routing key específica.
- */
 public final class Payloads {
 
     private Payloads() {

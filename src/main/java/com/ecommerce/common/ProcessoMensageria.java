@@ -10,23 +10,10 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Classe base de todos os processos do sistema (os 5 microsserviços e os
- * consumidores de promoções). Concentra o que é igual em todos eles:
- *  - conexão com o RabbitMQ e carregamento das chaves;
- *  - declaração de exchanges e filas;
- *  - publicação de eventos assinados;
- *  - consumo de uma fila: cada evento é validado (EventBus.receber), os
- *    inválidos são descartados e os válidos vão para o TratadorEvento
- *    registrado para a routing key.
- *
- * Cada subclasse implementa iniciar(), onde declara sua topologia e registra
- * os tratadores dos eventos que consome.
- */
 public abstract class ProcessoMensageria {
 
-    protected final String nome;          // nome exibido nos logs, ex.: "Estoque"
-    private final String identificador;   // nome usado nas chaves e como producer, ex.: "estoque"
+    protected final String nome;
+    private final String identificador;
     private final Connection connection;
     private final Channel channel;
     private final KeyStoreManager keys;
@@ -115,7 +102,7 @@ public abstract class ProcessoMensageria {
         return null;
     }
 
-    /** Mesma regra do RabbitMQ para binding keys de exchanges topic: '*' vale exatamente uma palavra. */
+    // '*' vale exatamente uma palavra, igual às binding keys de exchanges topic do RabbitMQ
     private static boolean combina(String bindingKey, String routingKey) {
         String[] padrao = bindingKey.split("\\.");
         String[] palavras = routingKey.split("\\.");

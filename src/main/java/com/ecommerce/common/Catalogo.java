@@ -4,12 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Catálogo estático de produtos, compartilhado pelos processos apenas como dado
- * de referência local (não é uma chamada entre microsserviços). Cada
- * microsserviço mantém sua própria cópia em memória; o estado real de estoque
- * é controlado exclusivamente pelo Microsserviço Estoque.
- */
 public final class Catalogo {
 
     private static final List<Produto> PRODUTOS = new ArrayList<>();

@@ -10,19 +10,6 @@ import java.security.KeyPair;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Ferramenta executada UMA VEZ, antes de iniciar os microsserviços.
- * Gera um par de chaves RSA para cada microsserviço e cria uma pasta por
- * processo contendo as chaves públicas de todos os demais microsserviços:
- *
- *   keys/<microsservico>/private_key.pem
- *   keys/<microsservico>/public_keys/<outro microsservico>.pem
- *   keys/consumidor-c1/public_keys/<microsservico>.pem   (idem para consumidor-c2)
- *
- * Cada microsserviço usa sua própria private_key.pem para assinar os eventos
- * que publica, e as chaves de public_keys/ para verificar as assinaturas dos
- * eventos que consome.
- */
 public class KeyGeneratorTool {
 
     private static final String[] CONSUMIDORES = {

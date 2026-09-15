@@ -10,13 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
-/**
- * Camada fina sobre o Channel do RabbitMQ que cuida de:
- *  - montar o Envelope, gerar o hash/assinatura digital e publicar;
- *  - receber uma entrega (Delivery), validar o evento (produtor autorizado e
- *    assinatura digital) e devolver o payload já desserializado — ou marcá-lo
- *    como inválido, caso em que o evento deve ser descartado.
- */
 public final class EventBus {
 
     private static final Gson GSON = new Gson();

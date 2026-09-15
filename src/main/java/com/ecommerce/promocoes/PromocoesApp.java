@@ -7,16 +7,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Microsserviço Promoções.
- *
- * Gera promoções aleatórias de produtos e publica na exchange Promoções
- * (topic), usando routing keys que indicam a categoria do produto:
- * promocao.categoria.A, promocao.categoria.B, promocao.categoria.C.
- *
- * Este microsserviço apenas publica eventos; não consome nenhum evento e não
- * realiza chamadas para outros microsserviços.
- */
 public class PromocoesApp extends ProcessoMensageria {
 
     private static final int[] DESCONTOS_POSSIVEIS = {10, 15, 20, 25, 30, 40};

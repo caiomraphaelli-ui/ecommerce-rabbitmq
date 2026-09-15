@@ -7,28 +7,6 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Responsável por carregar, a partir da pasta do próprio processo em keys/:
- *  - sua própria chave privada (usada para assinar os eventos que publica);
- *  - as chaves públicas de todos os demais microsserviços (usadas para
- *    verificar a assinatura dos eventos que consome).
- *
- * Estrutura de pastas (uma pasta por microsserviço, cada uma contendo as
- * chaves públicas de todos os demais):
- *
- *   keys/
- *     principal/
- *       private_key.pem                 (chave privada, só do principal)
- *       public_keys/estoque.pem, pagamento.pem, entrega.pem, promocoes.pem
- *     estoque/
- *       private_key.pem
- *       public_keys/principal.pem, pagamento.pem, entrega.pem, promocoes.pem
- *     pagamento/, entrega/, promocoes/  (idem)
- *     consumidor-c1/, consumidor-c2/
- *       public_keys/  (públicas dos 5 microsserviços; sem chave privada, pois não publicam)
- *
- * Cada processo lê apenas a própria pasta.
- */
 public class KeyStoreManager {
 
     private static final Path KEYS_ROOT = Paths.get("keys");

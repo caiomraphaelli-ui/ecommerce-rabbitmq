@@ -5,13 +5,6 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.UUID;
 
-/**
- * Envelope que trafega no RabbitMQ. Contém os metadados do evento, o payload
- * (já serializado em JSON, como String, para garantir que a verificação da
- * assinatura seja feita sobre os EXATOS mesmos bytes que foram assinados na
- * origem) e o campo Signature com a assinatura digital (Base64) gerada com a
- * chave privada do microsserviço produtor.
- */
 public class Envelope {
 
     private static final Gson GSON = new Gson();
@@ -19,12 +12,12 @@ public class Envelope {
     public String eventId;
     public String exchange;
     public String routingKey;
-    public String producer;   // nome do microsserviço que publicou o evento
+    public String producer;
     public long timestamp;
-    public String payload;    // JSON do payload específico do evento (string bruta)
+    public String payload;
 
     @SerializedName("Signature")
-    public String signature;  // assinatura digital (Base64) sobre conteudoAssinado()
+    public String signature;
 
     public Envelope() {
     }

@@ -2,13 +2,6 @@ package com.ecommerce.consumidores;
 
 import com.ecommerce.common.RabbitConfig;
 
-/**
- * Consumidor de Promoções C2.
- *
- * Registra interesse em TODAS as categorias de produtos, usando o padrão de
- * binding "promocao.categoria.*" (o caractere * substitui exatamente uma
- * palavra na routing key, cobrindo A, B, C ou qualquer categoria futura).
- */
 public class ConsumidorC2 extends ConsumidorPromocoes {
 
     public ConsumidorC2() throws Exception {
