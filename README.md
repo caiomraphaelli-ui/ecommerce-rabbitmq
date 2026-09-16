@@ -169,6 +169,19 @@ pedidos), mas nenhum deles trava se algum publicador vier depois:
 ./scripts/run-principal.sh      # terminal interativo — use este por último
 ```
 
+Ou, para iniciar tudo de uma vez na ordem acima:
+
+```bash
+./scripts/iniciar-tudo.sh                                            # Linux/Mac
+powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo.ps1    # Windows
+```
+
+O script confere se o RabbitMQ está rodando, compila o projeto e gera as
+chaves se for preciso, inicia os consumidores, depois o Promoções e, por
+último, o Principal no próprio terminal. No Windows cada processo abre em uma
+janela própria; no Linux/Mac eles rodam em segundo plano com a saída em
+`logs/<processo>.log`. Ao sair do Principal, os demais processos são encerrados.
+
 No terminal do **Principal**, use o menu para visualizar produtos, realizar
 pedidos, excluir pedidos e consultar o status. Os demais terminais vão logando
 o processamento de cada evento (e o painel do RabbitMQ mostra as filas
