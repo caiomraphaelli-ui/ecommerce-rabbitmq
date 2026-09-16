@@ -27,15 +27,21 @@ public class KeyStoreManager {
         try {
             if (publicaEventos) {
                 this.chavePrivadaPropria = CryptoUtils.carregarChavePrivada(pasta.resolve(ARQUIVO_CHAVE_PRIVADA));
+                System.out.println("[KeyStoreManager] '" + processo + "': chave privada própria carregada (fingerprint "
+                        + CryptoUtils.fingerprint(chavePrivadaPropria) + ")");
             } else {
                 this.chavePrivadaPropria = null;
+                System.out.println("[KeyStoreManager] '" + processo + "': não publica eventos, nenhuma chave privada carregada");
             }
             for (String ms : RabbitConfig.MICROSSERVICOS) {
                 if (ms.equals(processo)) {
                     continue;
                 }
                 Path pubPath = pasta.resolve(PASTA_CHAVES_PUBLICAS).resolve(ms + ".pem");
-                chavesPublicas.put(ms, CryptoUtils.carregarChavePublica(pubPath));
+                PublicKey chavePublica = CryptoUtils.carregarChavePublica(pubPath);
+                chavesPublicas.put(ms, chavePublica);
+                System.out.println("[KeyStoreManager] '" + processo + "': chave pública de '" + ms + "' carregada (fingerprint "
+                        + CryptoUtils.fingerprint(chavePublica) + ")");
             }
         } catch (Exception e) {
             throw new RuntimeException("Erro ao carregar chaves de " + pasta + ". Execute primeiro o KeyGeneratorTool. " + e.getMessage(), e);

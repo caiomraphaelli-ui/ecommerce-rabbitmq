@@ -18,7 +18,6 @@ com\ecommerce\common\ProcessoMensageria$Registro.class
 com\ecommerce\common\Payloads$Promocao.class
 com\ecommerce\consumidores\ConsumidorPromocoes.class
 com\ecommerce\keys\KeyGeneratorTool.class
-com\ecommerce\principal\Pedido$Status.class
 com\ecommerce\pagamento\PagamentoApp.class
 com\ecommerce\common\EventBus$EventoRecebido.class
 com\ecommerce\common\Payloads$PagamentoAprovado.class

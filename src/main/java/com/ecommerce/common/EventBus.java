@@ -23,6 +23,8 @@ public final class EventBus {
         String payloadJson = GSON.toJson(payloadObj);
         Envelope envelope = new Envelope(exchange, routingKey, producerName, payloadJson);
         envelope.signature = CryptoUtils.assinar(envelope.conteudoAssinado(), chavePrivada);
+        System.out.println("[EventBus] Publicando '" + routingKey + "' (eventId " + envelope.eventId + ") assinado por '"
+                + producerName + "' com chave privada fingerprint " + CryptoUtils.fingerprint(chavePrivada));
 
         String envelopeJson = GSON.toJson(envelope);
         channel.basicPublish(
@@ -92,7 +94,11 @@ public final class EventBus {
             return invalido(envelope, e.getMessage());
         }
 
-        if (!CryptoUtils.verificar(envelope.conteudoAssinado(), envelope.signature, chavePublica)) {
+        boolean assinaturaValida = CryptoUtils.verificar(envelope.conteudoAssinado(), envelope.signature, chavePublica);
+        System.out.println("[EventBus] Verificando '" + routingKey + "' (eventId " + envelope.eventId + ") de '"
+                + envelope.producer + "' com chave pública fingerprint " + CryptoUtils.fingerprint(chavePublica)
+                + " -> " + (assinaturaValida ? "assinatura OK" : "assinatura INVÁLIDA"));
+        if (!assinaturaValida) {
             return invalido(envelope, "assinatura digital inválida");
         }
 

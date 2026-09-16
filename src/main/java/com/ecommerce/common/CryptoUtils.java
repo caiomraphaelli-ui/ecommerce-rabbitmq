@@ -10,6 +10,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+
 public final class CryptoUtils {
 
     private static final String ALGORITMO_CHAVE = "RSA";
@@ -34,11 +35,35 @@ public final class CryptoUtils {
 
     /** Etapa 1: gera o hash SHA-256 do conteúdo do evento. */
     public static byte[] gerarHash(String conteudo) {
+        return sha256(conteudo.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static byte[] sha256(byte[] dados) {
         try {
-            return MessageDigest.getInstance(ALGORITMO_HASH).digest(conteudo.getBytes(StandardCharsets.UTF_8));
+            return MessageDigest.getInstance(ALGORITMO_HASH).digest(dados);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 indisponível", e);
         }
+    }
+
+    /**
+     * Fingerprint curto (SHA-256 da chave, exibindo só os 8 primeiros bytes
+     * em hexadecimal) para identificar visualmente uma chave em logs e
+     * demonstrações — ex.: "A1:B2:C3:D4:E5:F6:07:08". Serve só para
+     * conferência visual (comparar se duas chaves são a mesma "de olho");
+     * a segurança real do sistema continua sendo a assinatura/verificação
+     * completas em {@link #assinar} e {@link #verificar}.
+     */
+    public static String fingerprint(Key chave) {
+        byte[] hash = sha256(chave.getEncoded());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            if (i > 0) {
+                sb.append(':');
+            }
+            sb.append(String.format("%02X", hash[i]));
+        }
+        return sb.toString();
     }
 
     /**

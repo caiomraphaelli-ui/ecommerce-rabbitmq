@@ -1,0 +1,75 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Attach: Principal (5005)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Estoque (5006)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5006,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Pagamento (5007)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5007,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Entrega (5008)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5008,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Promoções (5009)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5009,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Consumidor C1 (5010)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5010,
+            "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Consumidor C2 (5011)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5011,
+            "projectName": "ecommerce-rabbitmq"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Attach: TODOS os processos",
+            "configurations": [
+                "Attach: Principal (5005)",
+                "Attach: Estoque (5006)",
+                "Attach: Pagamento (5007)",
+                "Attach: Entrega (5008)",
+                "Attach: Promoções (5009)",
+                "Attach: Consumidor C1 (5010)",
+                "Attach: Consumidor C2 (5011)"
+            ]
+        }
+    ]
+}
