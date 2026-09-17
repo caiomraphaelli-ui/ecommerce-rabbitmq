@@ -6,11 +6,25 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PrincipalApp extends ProcessoMensageria {
 
+    private static final long TIMEOUT_CONSULTA_ESTOQUE_MS = 1500;
+    private static final long TIMEOUT_CANCELAMENTO_PENDENTE_MS = 1000;
+
     private final Map<String, Pedido> pedidos = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> estoqueVisivel = new ConcurrentHashMap<>();
+    private volatile CountDownLatch aguardandoEstoque;
+
+    // Conta cancelamentos automáticos (estoque indisponível / pagamento recusado) que
+    // a thread do RabbitMQ já decidiu fazer mas ainda não terminou de publicar. A thread
+    // do menu espera esse contador zerar antes de perguntar o estoque, senão a pergunta
+    // pode sair (e voltar) antes do pedido.excluido correspondente — mostrando um número
+    // que ainda não considera a devolução que está em andamento.
+    private final AtomicInteger cancelamentosPendentes = new AtomicInteger(0);
 
     public PrincipalApp() throws Exception {
         super("Principal", RabbitConfig.MS_PRINCIPAL, true);
@@ -58,7 +72,7 @@ public class PrincipalApp extends ProcessoMensageria {
         }
         p.status = PedidoStatus.CANCELADO_ESTOQUE;
         avisar("Pedido " + p.id + ": produto indisponível em estoque. Cancelando pedido...");
-        publicarPedidoExcluido(p.id, "Produto indisponível em estoque");
+        cancelarAutomaticamente(p.id, "Produto indisponível em estoque");
     }
 
     private void aoAprovarPagamento(Payloads.PagamentoAprovado evento) {
@@ -77,7 +91,7 @@ public class PrincipalApp extends ProcessoMensageria {
         }
         p.status = PedidoStatus.CANCELADO_PAGAMENTO;
         avisar("Pedido " + p.id + ": pagamento recusado. Cancelando pedido...");
-        publicarPedidoExcluido(p.id, "Pagamento recusado");
+        cancelarAutomaticamente(p.id, "Pagamento recusado");
     }
 
     private void aoEnviarPedido(Payloads.PedidoEnviado evento) {
@@ -93,6 +107,10 @@ public class PrincipalApp extends ProcessoMensageria {
     private void aoAtualizarEstoque(Payloads.EstoqueAtualizado evento) {
         estoqueVisivel.clear();
         estoqueVisivel.putAll(evento.disponibilidade);
+        CountDownLatch latch = aguardandoEstoque;
+        if (latch != null) {
+            latch.countDown();
+        }
     }
 
     /** Mostra a notificação sem atrapalhar muito o menu que está esperando entrada do usuário. */
@@ -104,6 +122,16 @@ public class PrincipalApp extends ProcessoMensageria {
     private void publicarPedidoExcluido(String pedidoId, String motivo) throws IOException {
         publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_EXCLUIDO,
                 new Payloads.PedidoExcluido(pedidoId, motivo));
+    }
+
+    /** Igual a publicarPedidoExcluido, mas marcado como pendente até a publicação terminar (ver cancelamentosPendentes). */
+    private void cancelarAutomaticamente(String pedidoId, String motivo) throws IOException {
+        cancelamentosPendentes.incrementAndGet();
+        try {
+            publicarPedidoExcluido(pedidoId, motivo);
+        } finally {
+            cancelamentosPendentes.decrementAndGet();
+        }
     }
 
     public void executarMenu() {
@@ -145,11 +173,45 @@ public class PrincipalApp extends ProcessoMensageria {
     }
 
     private void visualizarProdutos() {
+        atualizarEstoqueVisivel();
         System.out.println("\n--- Catálogo de produtos ---");
         for (Produto p : Catalogo.listar()) {
             Integer disponivel = estoqueVisivel.get(p.id);
             String estoqueTxt = disponivel == null ? "estoque: consultando..." : "estoque: " + disponivel + " un.";
             System.out.println(p + "  [" + estoqueTxt + "]");
+        }
+    }
+
+    /**
+     * Pede um snapshot fresco do estoque e espera a resposta chegar (até
+     * TIMEOUT_CONSULTA_ESTOQUE_MS) antes de exibir o catálogo. Evita mostrar
+     * um número desatualizado logo depois de um pedido ser cancelado (o
+     * estoque só é devolvido quando o Estoque processa o pedido.excluido,
+     * e isso é assíncrono).
+     */
+    private void atualizarEstoqueVisivel() {
+        aguardarCancelamentosPendentes();
+        CountDownLatch latch = new CountDownLatch(1);
+        aguardandoEstoque = latch;
+        try {
+            publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_CONSULTAR, new Payloads.EstoqueConsultar());
+            latch.await(TIMEOUT_CONSULTA_ESTOQUE_MS, TimeUnit.MILLISECONDS);
+        } catch (IOException | InterruptedException e) {
+            // segue com o que já estiver em estoqueVisivel (ou "consultando..." se ainda vazio)
+        } finally {
+            aguardandoEstoque = null;
+        }
+    }
+
+    private void aguardarCancelamentosPendentes() {
+        long limite = System.currentTimeMillis() + TIMEOUT_CANCELAMENTO_PENDENTE_MS;
+        while (cancelamentosPendentes.get() > 0 && System.currentTimeMillis() < limite) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 
