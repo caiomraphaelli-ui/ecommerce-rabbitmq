@@ -4,6 +4,7 @@ import com.ecommerce.common.*;
 import com.rabbitmq.client.BuiltinExchangeType;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,12 +26,15 @@ public class EstoqueApp extends ProcessoMensageria {
         declararExchange(RabbitConfig.EXCHANGE_ECOMMERCE, BuiltinExchangeType.DIRECT);
         declararFila(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.FILA_ESTOQUE,
                 RabbitConfig.RK_PEDIDO_CRIADO,
-                RabbitConfig.RK_PEDIDO_EXCLUIDO);
+                RabbitConfig.RK_PEDIDO_EXCLUIDO,
+                RabbitConfig.RK_ESTOQUE_CONSULTAR);
 
         registrarTratador(RabbitConfig.RK_PEDIDO_CRIADO, Payloads.PedidoCriado.class, this::tratarPedidoCriado);
         registrarTratador(RabbitConfig.RK_PEDIDO_EXCLUIDO, Payloads.PedidoExcluido.class, this::tratarPedidoExcluido);
+        registrarTratador(RabbitConfig.RK_ESTOQUE_CONSULTAR, Payloads.EstoqueConsultar.class, evento -> publicarEstoqueAtualizado());
 
         System.out.println("Microsserviço Estoque iniciado. Estoque inicial: " + estoque);
+        publicarEstoqueAtualizado();
         consumir(RabbitConfig.FILA_ESTOQUE);
     }
 
@@ -55,6 +59,7 @@ public class EstoqueApp extends ProcessoMensageria {
             log("Pedido " + pedido.pedidoId + ": estoque reservado. Valor total: R$ " + String.format("%.2f", valorTotal));
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_ESTOQUE_OK,
                     new Payloads.PedidoEstoqueOk(pedido.pedidoId, valorTotal, pedido.itens));
+            publicarEstoqueAtualizado();
         } else {
             log("Pedido " + pedido.pedidoId + ": produto(s) indisponível(is).");
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_INDISPONIVEL,
@@ -62,7 +67,7 @@ public class EstoqueApp extends ProcessoMensageria {
         }
     }
 
-    private synchronized void tratarPedidoExcluido(Payloads.PedidoExcluido evento) {
+    private synchronized void tratarPedidoExcluido(Payloads.PedidoExcluido evento) throws IOException {
         String pedidoId = evento.pedidoId;
         List<ItemPedido> itensReservados = reservas.remove(pedidoId);
         if (itensReservados != null) {
@@ -70,9 +75,15 @@ public class EstoqueApp extends ProcessoMensageria {
                 estoque.merge(item.produtoId, item.quantidade, Integer::sum);
             }
             log("Pedido " + pedidoId + " excluído: itens devolvidos ao estoque.");
+            publicarEstoqueAtualizado();
         } else {
             log("Pedido " + pedidoId + " excluído: nenhuma reserva encontrada (nada a devolver).");
         }
+    }
+
+    private void publicarEstoqueAtualizado() throws IOException {
+        publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_ATUALIZADO,
+                new Payloads.EstoqueAtualizado(new HashMap<>(estoque)));
     }
 
     private double calcularValorTotal(List<ItemPedido> itens) {
