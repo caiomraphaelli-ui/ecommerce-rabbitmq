@@ -19,11 +19,8 @@ public class PrincipalApp extends ProcessoMensageria {
     private final Map<Integer, Integer> estoqueVisivel = new ConcurrentHashMap<>();
     private volatile CountDownLatch aguardandoEstoque;
 
-    // Conta cancelamentos automáticos (estoque indisponível / pagamento recusado) que
-    // a thread do RabbitMQ já decidiu fazer mas ainda não terminou de publicar. A thread
-    // do menu espera esse contador zerar antes de perguntar o estoque, senão a pergunta
-    // pode sair (e voltar) antes do pedido.excluido correspondente — mostrando um número
-    // que ainda não considera a devolução que está em andamento.
+    // Cancelamentos automáticos publicados pela thread do RabbitMQ mas ainda em voo;
+    // a thread do menu espera esse contador zerar antes de perguntar o estoque.
     private final AtomicInteger cancelamentosPendentes = new AtomicInteger(0);
 
     public PrincipalApp() throws Exception {
@@ -103,7 +100,6 @@ public class PrincipalApp extends ProcessoMensageria {
         avisar("Pedido " + p.id + ": enviado! Nota fiscal: " + evento.numeroNota);
     }
 
-    /** Atualiza o cache local de estoque exibido no menu; não gera notificação (não é status de pedido). */
     private void aoAtualizarEstoque(Payloads.EstoqueAtualizado evento) {
         estoqueVisivel.clear();
         estoqueVisivel.putAll(evento.disponibilidade);
@@ -124,7 +120,6 @@ public class PrincipalApp extends ProcessoMensageria {
                 new Payloads.PedidoExcluido(pedidoId, motivo));
     }
 
-    /** Igual a publicarPedidoExcluido, mas marcado como pendente até a publicação terminar (ver cancelamentosPendentes). */
     private void cancelarAutomaticamente(String pedidoId, String motivo) throws IOException {
         cancelamentosPendentes.incrementAndGet();
         try {
@@ -182,13 +177,6 @@ public class PrincipalApp extends ProcessoMensageria {
         }
     }
 
-    /**
-     * Pede um snapshot fresco do estoque e espera a resposta chegar (até
-     * TIMEOUT_CONSULTA_ESTOQUE_MS) antes de exibir o catálogo. Evita mostrar
-     * um número desatualizado logo depois de um pedido ser cancelado (o
-     * estoque só é devolvido quando o Estoque processa o pedido.excluido,
-     * e isso é assíncrono).
-     */
     private void atualizarEstoqueVisivel() {
         aguardarCancelamentosPendentes();
         CountDownLatch latch = new CountDownLatch(1);
