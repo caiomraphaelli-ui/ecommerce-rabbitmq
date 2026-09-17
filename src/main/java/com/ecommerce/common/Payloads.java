@@ -1,6 +1,7 @@
 package com.ecommerce.common;
 
 import java.util.List;
+import java.util.Map;
 
 public final class Payloads {
 
@@ -51,6 +52,19 @@ public final class Payloads {
             this.pedidoId = pedidoId;
             this.motivo = motivo;
         }
+    }
+
+    /** Publicado pelo MS Estoque na routing key estoque.atualizado */
+    public static class EstoqueAtualizado {
+        public Map<Integer, Integer> disponibilidade;
+
+        public EstoqueAtualizado(Map<Integer, Integer> disponibilidade) {
+            this.disponibilidade = disponibilidade;
+        }
+    }
+
+    /** Publicado pelo MS Principal na routing key estoque.consultar (pede um estoque.atualizado de volta) */
+    public static class EstoqueConsultar {
     }
 
     /** Publicado pelo MS Pagamento na routing key pagamento.aprovado */

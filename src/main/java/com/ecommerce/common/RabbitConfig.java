@@ -25,6 +25,8 @@ public final class RabbitConfig {
     public static final String RK_PEDIDO_EXCLUIDO = "pedido.excluido";
     public static final String RK_PEDIDO_ESTOQUE_OK = "pedido.estoque_ok";
     public static final String RK_ESTOQUE_INDISPONIVEL = "estoque.indisponivel";
+    public static final String RK_ESTOQUE_ATUALIZADO = "estoque.atualizado";
+    public static final String RK_ESTOQUE_CONSULTAR = "estoque.consultar";
     public static final String RK_PAGAMENTO_APROVADO = "pagamento.aprovado";
     public static final String RK_PAGAMENTO_RECUSADO = "pagamento.recusado";
     public static final String RK_PEDIDO_ENVIADO = "pedido.enviado";
@@ -58,9 +60,11 @@ public final class RabbitConfig {
         switch (routingKey) {
             case RK_PEDIDO_CRIADO:
             case RK_PEDIDO_EXCLUIDO:
+            case RK_ESTOQUE_CONSULTAR:
                 return MS_PRINCIPAL;
             case RK_PEDIDO_ESTOQUE_OK:
             case RK_ESTOQUE_INDISPONIVEL:
+            case RK_ESTOQUE_ATUALIZADO:
                 return MS_ESTOQUE;
             case RK_PAGAMENTO_APROVADO:
             case RK_PAGAMENTO_RECUSADO:

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PrincipalApp extends ProcessoMensageria {
 
     private final Map<String, Pedido> pedidos = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> estoqueVisivel = new ConcurrentHashMap<>();
 
     public PrincipalApp() throws Exception {
         super("Principal", RabbitConfig.MS_PRINCIPAL, true);
@@ -23,15 +24,20 @@ public class PrincipalApp extends ProcessoMensageria {
                 RabbitConfig.RK_PAGAMENTO_RECUSADO,
                 RabbitConfig.RK_PEDIDO_ENVIADO,
                 RabbitConfig.RK_PEDIDO_ESTOQUE_OK,
-                RabbitConfig.RK_ESTOQUE_INDISPONIVEL);
+                RabbitConfig.RK_ESTOQUE_INDISPONIVEL,
+                RabbitConfig.RK_ESTOQUE_ATUALIZADO);
 
         registrarTratador(RabbitConfig.RK_PEDIDO_ESTOQUE_OK, Payloads.PedidoEstoqueOk.class, this::aoConfirmarEstoque);
         registrarTratador(RabbitConfig.RK_ESTOQUE_INDISPONIVEL, Payloads.EstoqueIndisponivel.class, this::aoFaltarEstoque);
+        registrarTratador(RabbitConfig.RK_ESTOQUE_ATUALIZADO, Payloads.EstoqueAtualizado.class, this::aoAtualizarEstoque);
         registrarTratador(RabbitConfig.RK_PAGAMENTO_APROVADO, Payloads.PagamentoAprovado.class, this::aoAprovarPagamento);
         registrarTratador(RabbitConfig.RK_PAGAMENTO_RECUSADO, Payloads.PagamentoRecusado.class, this::aoRecusarPagamento);
         registrarTratador(RabbitConfig.RK_PEDIDO_ENVIADO, Payloads.PedidoEnviado.class, this::aoEnviarPedido);
 
         consumir(RabbitConfig.FILA_PRINCIPAL);
+
+        // a fila e o bind pra estoque.atualizado já existem acima, então a resposta não se perde
+        publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_CONSULTAR, new Payloads.EstoqueConsultar());
     }
 
     private void aoConfirmarEstoque(Payloads.PedidoEstoqueOk evento) {
@@ -81,6 +87,12 @@ public class PrincipalApp extends ProcessoMensageria {
         }
         p.status = PedidoStatus.ENVIADO;
         avisar("Pedido " + p.id + ": enviado! Nota fiscal: " + evento.numeroNota);
+    }
+
+    /** Atualiza o cache local de estoque exibido no menu; não gera notificação (não é status de pedido). */
+    private void aoAtualizarEstoque(Payloads.EstoqueAtualizado evento) {
+        estoqueVisivel.clear();
+        estoqueVisivel.putAll(evento.disponibilidade);
     }
 
     /** Mostra a notificação sem atrapalhar muito o menu que está esperando entrada do usuário. */
@@ -135,7 +147,9 @@ public class PrincipalApp extends ProcessoMensageria {
     private void visualizarProdutos() {
         System.out.println("\n--- Catálogo de produtos ---");
         for (Produto p : Catalogo.listar()) {
-            System.out.println(p);
+            Integer disponivel = estoqueVisivel.get(p.id);
+            String estoqueTxt = disponivel == null ? "estoque: consultando..." : "estoque: " + disponivel + " un.";
+            System.out.println(p + "  [" + estoqueTxt + "]");
         }
     }
 
