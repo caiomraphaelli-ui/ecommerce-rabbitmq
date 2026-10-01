@@ -1,7 +1,6 @@
 package com.ecommerce.common;
 
 import java.util.List;
-import java.util.Map;
 
 public final class Payloads {
 
@@ -54,17 +53,33 @@ public final class Payloads {
         }
     }
 
-    /** Publicado pelo MS Estoque na routing key estoque.atualizado */
-    public static class EstoqueAtualizado {
-        public Map<Integer, Integer> disponibilidade;
+    /** Publicado pelo MS Principal na routing key interesse.promocao */
+    public static class InteressePromocao {
+        public static final String INSCREVER = "INSCREVER";
+        public static final String CANCELAR = "CANCELAR";
 
-        public EstoqueAtualizado(Map<Integer, Integer> disponibilidade) {
-            this.disponibilidade = disponibilidade;
+        public String acao;
+        public String email;
+        public List<String> categorias; // vazio quando acao = CANCELAR
+
+        public InteressePromocao(String acao, String email, List<String> categorias) {
+            this.acao = acao;
+            this.email = email;
+            this.categorias = categorias;
         }
     }
 
-    /** Publicado pelo MS Principal na routing key estoque.consultar (pede um estoque.atualizado de volta) */
-    public static class EstoqueConsultar {
+    /** Publicado pelo MS Pagamento na routing key pagamento.pendente (cobrança criada no provedor) */
+    public static class PagamentoPendente {
+        public String pedidoId;
+        public double valorTotal;
+        public String checkoutUrl;
+
+        public PagamentoPendente(String pedidoId, double valorTotal, String checkoutUrl) {
+            this.pedidoId = pedidoId;
+            this.valorTotal = valorTotal;
+            this.checkoutUrl = checkoutUrl;
+        }
     }
 
     /** Publicado pelo MS Pagamento na routing key pagamento.aprovado */
