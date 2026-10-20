@@ -1,22 +1,31 @@
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\Catalogo.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\CryptoUtils.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\Envelope.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\EventBus.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\ItemPedido.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\KeyStoreManager.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\Payloads.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\ProcessoMensageria.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\Produto.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\RabbitConfig.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\common\TratadorEvento.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\consumidores\ConsumidorC1.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\consumidores\ConsumidorC2.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\consumidores\ConsumidorPromocoes.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\entrega\EntregaApp.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\estoque\EstoqueApp.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\keys\KeyGeneratorTool.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\pagamento\PagamentoApp.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\principal\Pedido.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\principal\PedidoStatus.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\principal\PrincipalApp.java
-C:\Users\Caio\Documents\Trabalhos\ecommerce-rabbitmq\src\main\java\com\ecommerce\promocoes\PromocoesApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Ambiente.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/ArquivoJson.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Catalogo.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/CryptoUtils.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Envelope.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/EventBus.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Http.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/HttpConfig.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/ItemPedido.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/KeyStoreManager.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Payloads.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/ProcessoMensageria.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/Produto.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/RabbitConfig.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/common/TratadorEvento.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/consumidores/ConsumidorC1.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/consumidores/ConsumidorC2.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/consumidores/ConsumidorPromocoes.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/entrega/EntregaApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/estoque/EstoqueApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/estoque/ProdutoEstoque.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/keys/KeyGeneratorTool.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/mockpagamento/MockPagamentoApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/pagamento/PagamentoApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/principal/Pedido.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/principal/PedidoStatus.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/principal/PrincipalApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/principal/SseHub.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/promocoes/EmailTemplates.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/promocoes/PromocoesApp.java
+/Users/brianleao/Sistemas Distribuidos/ecommerce-rabbitmq/src/main/java/com/ecommerce/promocoes/ResendEmail.java

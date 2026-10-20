@@ -156,7 +156,7 @@ e as únicas dependências continuam sendo `amqp-client` e `gson`.
 
 ## 5. Pré-requisitos
 
-- **Java 25 (LTS) ou superior** e **Maven 3.6+**
+- **Java 11+** e **Maven 3.6+**
 - **RabbitMQ**. Pelo Docker:
 
   ```bash
