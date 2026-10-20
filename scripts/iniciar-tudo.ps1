@@ -1,22 +1,35 @@
-﻿# Inicia todos os processos do sistema na ordem recomendada:
-#   1. confere se o RabbitMQ está rodando
+﻿# Inicia todo o sistema na ordem recomendada:
+#   1. confere se o RabbitMQ está rodando (porta RABBIT_PORT do .env, padrão 5672)
 #   2. compila o projeto (se ainda não foi compilado ou se o código mudou)
 #   3. gera as chaves RSA (se ainda não existirem)
-#   4. abre uma janela para cada processo que consome eventos:
-#      Estoque, Pagamento, Entrega, Consumidor C1 e Consumidor C2
-#   5. abre a janela do Promoções (as filas do C1/C2 já existem, nenhuma promoção se perde)
-#   6. roda o Principal (menu) neste terminal
-# Ao sair do Principal (opção 0 ou Ctrl+C), as outras janelas são fechadas.
+#   4. abre uma janela para o Mock de Pagamento (sistema externo) e para cada
+#      processo que consome eventos: Estoque, Pagamento, Entrega, C1 e C2
+#   5. abre as janelas do Promoções e do MS Principal / API Gateway
+#   6. abre o frontend (http://localhost:8080) no navegador
+# Pressione ENTER neste terminal para encerrar todas as janelas.
 #
-# Uso: powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo.ps1
+# Uso: powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo.ps1 [-Depurar]
+#   -Depurar: cada processo abre uma porta JDWP para anexar o debugger
+#             (Principal 5005, Estoque 5006, Pagamento 5007, Entrega 5008,
+#              Promoções 5009, C1 5010, C2 5011, Mock 5012)
+param([switch]$Depurar)
 
 $pastaScripts = $PSScriptRoot
 Set-Location (Join-Path $pastaScripts "..")
 
-function Test-RabbitMQ {
+function Porta-RabbitMQ {
+    if ($env:RABBIT_PORT) { return [int]$env:RABBIT_PORT }
+    if (Test-Path ".env") {
+        $linha = Get-Content ".env" | Where-Object { $_ -match '^\s*RABBIT_PORT\s*=\s*(\d+)' } | Select-Object -First 1
+        if ($linha -and $linha -match '=\s*(\d+)') { return [int]$Matches[1] }
+    }
+    return 5672
+}
+
+function Test-RabbitMQ($porta) {
     $cliente = New-Object System.Net.Sockets.TcpClient
     try {
-        return $cliente.ConnectAsync("localhost", 5672).Wait(2000)
+        return $cliente.ConnectAsync("localhost", $porta).Wait(2000)
     } catch {
         return $false
     } finally {
@@ -24,10 +37,15 @@ function Test-RabbitMQ {
     }
 }
 
-function Iniciar-Janela($titulo, $script) {
-    $caminho = Join-Path $pastaScripts $script
-    $comando = "`$Host.UI.RawUI.WindowTitle = '$titulo'; & '$caminho'"
-    Write-Host " -> $titulo"
+function Iniciar-Janela($titulo, $classe, $portaDebug) {
+    if ($Depurar) {
+        $comandoJava = "& '$(Join-Path $pastaScripts "run-debug.ps1")' $classe $portaDebug"
+        Write-Host " -> $titulo (debug na porta $portaDebug)"
+    } else {
+        $comandoJava = "& '$(Join-Path $pastaScripts "run.ps1")' $classe"
+        Write-Host " -> $titulo"
+    }
+    $comando = "`$Host.UI.RawUI.WindowTitle = '$titulo'; $comandoJava"
     return Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $comando -PassThru
 }
 
@@ -37,8 +55,9 @@ function Parar-Arvore($id) {
     Stop-Process -Id $id -Force -ErrorAction SilentlyContinue
 }
 
-if (-not (Test-RabbitMQ)) {
-    Write-Host "RabbitMQ não está respondendo em localhost:5672. Inicie o RabbitMQ e tente de novo."
+$portaRabbit = Porta-RabbitMQ
+if (-not (Test-RabbitMQ $portaRabbit)) {
+    Write-Host "RabbitMQ não está respondendo em localhost:$portaRabbit. Inicie o RabbitMQ (ou ajuste RABBIT_PORT no .env)."
     exit 1
 }
 
@@ -60,24 +79,35 @@ if (-not (Test-Path "keys\principal\private_key.pem")) {
     & (Join-Path $pastaScripts "gerar-chaves.ps1")
 }
 
-Write-Host "Iniciando os processos que consomem eventos..."
+if (-not (Test-Path ".env")) {
+    Write-Host "Aviso: sem arquivo .env -> e-mails de promoção apenas simulados (veja .env.example)."
+}
+
+Write-Host "Iniciando o Mock de Pagamento e os processos que consomem eventos..."
 $janelas = @()
-$janelas += Iniciar-Janela "Estoque" "run-estoque.ps1"
-$janelas += Iniciar-Janela "Pagamento" "run-pagamento.ps1"
-$janelas += Iniciar-Janela "Entrega" "run-entrega.ps1"
-$janelas += Iniciar-Janela "Consumidor C1" "run-consumidor-C1.ps1"
-$janelas += Iniciar-Janela "Consumidor C2" "run-consumidor-C2.ps1"
+$janelas += Iniciar-Janela "Mock de Pagamento" "com.ecommerce.mockpagamento.MockPagamentoApp" 5012
+$janelas += Iniciar-Janela "Estoque" "com.ecommerce.estoque.EstoqueApp" 5006
+$janelas += Iniciar-Janela "Pagamento" "com.ecommerce.pagamento.PagamentoApp" 5007
+$janelas += Iniciar-Janela "Entrega" "com.ecommerce.entrega.EntregaApp" 5008
+$janelas += Iniciar-Janela "Consumidor C1" "com.ecommerce.consumidores.ConsumidorC1" 5010
+$janelas += Iniciar-Janela "Consumidor C2" "com.ecommerce.consumidores.ConsumidorC2" 5011
 Start-Sleep -Seconds 5   # tempo para cada um conectar e declarar sua fila
 
-Write-Host "Iniciando o Promoções..."
-$janelas += Iniciar-Janela "Promoções" "run-promocoes.ps1"
-Start-Sleep -Seconds 2
+Write-Host "Iniciando o Promoções e o API Gateway..."
+$janelas += Iniciar-Janela "Promoções" "com.ecommerce.promocoes.PromocoesApp" 5009
+$janelas += Iniciar-Janela "API Gateway" "com.ecommerce.principal.PrincipalApp" 5005
+Start-Sleep -Seconds 4
 
-Write-Host "Iniciando o Principal neste terminal..."
+Write-Host ""
+Write-Host "Frontend:            http://localhost:8080"
+Write-Host "Mock de Pagamento:   http://localhost:8090"
+Write-Host "Painel do RabbitMQ:  http://localhost:15672 (guest/guest)"
+Start-Process "http://localhost:8080"
+
 try {
-    & (Join-Path $pastaScripts "run-principal.ps1")
+    Read-Host "Pressione ENTER para encerrar todos os processos"
 } finally {
-    Write-Host "Encerrando os demais processos..."
+    Write-Host "Encerrando os processos..."
     foreach ($janela in $janelas) {
         Parar-Arvore $janela.Id
     }

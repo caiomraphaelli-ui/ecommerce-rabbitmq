@@ -8,6 +8,9 @@ import java.util.UUID;
 
 public class EntregaApp extends ProcessoMensageria {
 
+    // tempo simulado de emissão da nota e despacho (deixa a etapa visível no frontend)
+    private static final long TEMPO_DESPACHO_MS = Long.parseLong(System.getProperty("entrega.tempo.ms", "3000"));
+
     public EntregaApp() throws Exception {
         super("Entrega", RabbitConfig.MS_ENTREGA, true);
     }
@@ -23,10 +26,11 @@ public class EntregaApp extends ProcessoMensageria {
         consumir(RabbitConfig.FILA_ENTREGA);
     }
 
-    private void emitirNotaEEnviar(Payloads.PagamentoAprovado pagamento) throws IOException {
+    private void emitirNotaEEnviar(Payloads.PagamentoAprovado pagamento) throws IOException, InterruptedException {
         String pedidoId = pagamento.pedidoId;
         String numeroNota = "NF-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         log("Emitindo nota fiscal " + numeroNota + " e preparando entrega do pedido " + pedidoId + "...");
+        Thread.sleep(TEMPO_DESPACHO_MS);
 
         publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_ENVIADO,
                 new Payloads.PedidoEnviado(pedidoId, numeroNota));

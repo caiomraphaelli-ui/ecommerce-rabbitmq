@@ -1,23 +1,44 @@
 package com.ecommerce.estoque;
 
 import com.ecommerce.common.*;
+import com.google.gson.reflect.TypeToken;
 import com.rabbitmq.client.BuiltinExchangeType;
+import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class EstoqueApp extends ProcessoMensageria {
 
-    private final Map<Integer, Integer> estoque = new ConcurrentHashMap<>();
-    private final Map<String, List<ItemPedido>> reservas = new ConcurrentHashMap<>();
+    private final ArquivoJson arquivo = new ArquivoJson("estoque.json");
+    private DadosEstoque dados;
+
+    /** Tudo o que o Estoque persiste: os produtos com a quantidade e as reservas de cada pedido. */
+    private static class DadosEstoque {
+        Map<Integer, ProdutoEstoque> produtos = new LinkedHashMap<>();
+        Map<String, List<ItemPedido>> reservas = new LinkedHashMap<>();
+    }
 
     public EstoqueApp() throws Exception {
         super("Estoque", RabbitConfig.MS_ESTOQUE, true);
-        for (Produto p : Catalogo.listar()) {
-            estoque.put(p.id, Catalogo.estoqueInicialPadrao());
+        carregarDados();
+    }
+
+    private void carregarDados() throws IOException {
+        dados = arquivo.ler(new TypeToken<DadosEstoque>() {}.getType());
+        if (dados == null) {
+            dados = new DadosEstoque();
+            for (Produto p : Catalogo.listar()) {
+                dados.produtos.put(p.id, new ProdutoEstoque(p, Catalogo.estoqueInicialPadrao()));
+            }
+            arquivo.salvar(dados);
+            log("Estoque inicial criado a partir do catálogo em " + arquivo.caminho());
+        } else {
+            log("Estoque carregado de " + arquivo.caminho() + " (" + dados.reservas.size() + " reserva(s) ativa(s))");
         }
     }
 
@@ -26,25 +47,53 @@ public class EstoqueApp extends ProcessoMensageria {
         declararExchange(RabbitConfig.EXCHANGE_ECOMMERCE, BuiltinExchangeType.DIRECT);
         declararFila(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.FILA_ESTOQUE,
                 RabbitConfig.RK_PEDIDO_CRIADO,
-                RabbitConfig.RK_PEDIDO_EXCLUIDO,
-                RabbitConfig.RK_ESTOQUE_CONSULTAR);
+                RabbitConfig.RK_PEDIDO_EXCLUIDO);
 
         registrarTratador(RabbitConfig.RK_PEDIDO_CRIADO, Payloads.PedidoCriado.class, this::tratarPedidoCriado);
         registrarTratador(RabbitConfig.RK_PEDIDO_EXCLUIDO, Payloads.PedidoExcluido.class, this::tratarPedidoExcluido);
-        registrarTratador(RabbitConfig.RK_ESTOQUE_CONSULTAR, Payloads.EstoqueConsultar.class, evento -> publicarEstoqueAtualizado());
 
-        System.out.println("Microsserviço Estoque iniciado. Estoque inicial: " + estoque);
-        publicarEstoqueAtualizado();
+        iniciarServidorRest();
         consumir(RabbitConfig.FILA_ESTOQUE);
+        System.out.println("Microsserviço Estoque iniciado. Estoque atual: " + resumoEstoque());
+    }
+
+    /**
+     * Endpoint REST consultado pelo API Gateway:
+     * GET /produtos                 -> todos os produtos com a quantidade em estoque
+     * GET /produtos?disponiveis=true -> apenas os que têm quantidade > 0
+     */
+    private void iniciarServidorRest() throws IOException {
+        HttpServer servidor = Http.criarServidor(HttpConfig.PORTA_ESTOQUE);
+        Http.rota(servidor, "/produtos", ex -> {
+            Http.exigirMetodo(ex, "GET");
+            boolean somenteDisponiveis = "true".equals(Http.query(ex).get("disponiveis"));
+            Http.responderJson(ex, 200, listarProdutos(somenteDisponiveis));
+        });
+        servidor.start();
+        log("API REST do Estoque em http://localhost:" + HttpConfig.PORTA_ESTOQUE + "/produtos");
+    }
+
+    private synchronized List<ProdutoEstoque> listarProdutos(boolean somenteDisponiveis) {
+        List<ProdutoEstoque> lista = new ArrayList<>();
+        for (ProdutoEstoque p : dados.produtos.values()) {
+            if (!somenteDisponiveis || p.quantidade > 0) {
+                lista.add(p.copia());
+            }
+        }
+        return lista;
     }
 
     private synchronized void tratarPedidoCriado(Payloads.PedidoCriado pedido) throws IOException {
         log("Recebido pedido.criado " + pedido.pedidoId);
+        if (dados.reservas.containsKey(pedido.pedidoId)) {
+            log("Pedido " + pedido.pedidoId + " já tem reserva (evento repetido). Ignorado.");
+            return;
+        }
 
-        boolean disponivel = true;
+        boolean disponivel = !pedido.itens.isEmpty();
         for (ItemPedido item : pedido.itens) {
-            Integer disponivelQtd = estoque.get(item.produtoId);
-            if (disponivelQtd == null || disponivelQtd < item.quantidade) {
+            ProdutoEstoque produto = dados.produtos.get(item.produtoId);
+            if (produto == null || item.quantidade <= 0 || produto.quantidade < item.quantidade) {
                 disponivel = false;
                 break;
             }
@@ -52,46 +101,52 @@ public class EstoqueApp extends ProcessoMensageria {
 
         if (disponivel) {
             for (ItemPedido item : pedido.itens) {
-                estoque.merge(item.produtoId, -item.quantidade, Integer::sum);
+                dados.produtos.get(item.produtoId).quantidade -= item.quantidade;
             }
-            reservas.put(pedido.pedidoId, pedido.itens);
+            dados.reservas.put(pedido.pedidoId, pedido.itens);
+            arquivo.salvar(dados);
             double valorTotal = calcularValorTotal(pedido.itens);
-            log("Pedido " + pedido.pedidoId + ": estoque reservado. Valor total: R$ " + String.format("%.2f", valorTotal));
+            log("Pedido " + pedido.pedidoId + ": estoque reservado. Valor total: R$ " + String.format("%.2f", valorTotal)
+                    + ". Estoque atual: " + resumoEstoque());
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PEDIDO_ESTOQUE_OK,
                     new Payloads.PedidoEstoqueOk(pedido.pedidoId, valorTotal, pedido.itens));
-            publicarEstoqueAtualizado();
         } else {
             log("Pedido " + pedido.pedidoId + ": produto(s) indisponível(is).");
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_INDISPONIVEL,
-                    new Payloads.EstoqueIndisponivel(pedido.pedidoId, "Quantidade solicitada indisponível"));
+                    new Payloads.EstoqueIndisponivel(pedido.pedidoId, "Quantidade solicitada indisponível em estoque"));
         }
     }
 
     private synchronized void tratarPedidoExcluido(Payloads.PedidoExcluido evento) throws IOException {
         String pedidoId = evento.pedidoId;
-        List<ItemPedido> itensReservados = reservas.remove(pedidoId);
+        List<ItemPedido> itensReservados = dados.reservas.remove(pedidoId);
         if (itensReservados != null) {
             for (ItemPedido item : itensReservados) {
-                estoque.merge(item.produtoId, item.quantidade, Integer::sum);
+                ProdutoEstoque produto = dados.produtos.get(item.produtoId);
+                if (produto != null) {
+                    produto.quantidade += item.quantidade;
+                }
             }
-            log("Pedido " + pedidoId + " excluído: itens devolvidos ao estoque.");
-            publicarEstoqueAtualizado();
+            arquivo.salvar(dados);
+            log("Pedido " + pedidoId + " excluído: itens devolvidos ao estoque. Estoque atual: " + resumoEstoque());
         } else {
             log("Pedido " + pedidoId + " excluído: nenhuma reserva encontrada (nada a devolver).");
         }
     }
 
-    private void publicarEstoqueAtualizado() throws IOException {
-        publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_ESTOQUE_ATUALIZADO,
-                new Payloads.EstoqueAtualizado(new HashMap<>(estoque)));
-    }
-
     private double calcularValorTotal(List<ItemPedido> itens) {
         double total = 0.0;
         for (ItemPedido item : itens) {
-            total += Catalogo.porId(item.produtoId).map(p -> p.preco).orElse(0.0) * item.quantidade;
+            ProdutoEstoque produto = dados.produtos.get(item.produtoId);
+            total += (produto == null ? 0.0 : produto.preco) * item.quantidade;
         }
         return total;
+    }
+
+    private String resumoEstoque() {
+        return dados.produtos.values().stream()
+                .map(p -> p.id + "=" + p.quantidade)
+                .collect(Collectors.joining(", ", "{", "}"));
     }
 
     public static void main(String[] args) throws Exception {

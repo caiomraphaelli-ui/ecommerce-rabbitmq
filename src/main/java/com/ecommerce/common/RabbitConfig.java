@@ -18,6 +18,7 @@ public final class RabbitConfig {
     public static final String FILA_ESTOQUE = "fila.estoque";
     public static final String FILA_PAGAMENTO = "fila.pagamento";
     public static final String FILA_ENTREGA = "fila.entrega";
+    public static final String FILA_PROMOCOES = "fila.promocoes";
     public static final String FILA_C1 = "fila.c1";
     public static final String FILA_C2 = "fila.c2";
 
@@ -25,8 +26,8 @@ public final class RabbitConfig {
     public static final String RK_PEDIDO_EXCLUIDO = "pedido.excluido";
     public static final String RK_PEDIDO_ESTOQUE_OK = "pedido.estoque_ok";
     public static final String RK_ESTOQUE_INDISPONIVEL = "estoque.indisponivel";
-    public static final String RK_ESTOQUE_ATUALIZADO = "estoque.atualizado";
-    public static final String RK_ESTOQUE_CONSULTAR = "estoque.consultar";
+    public static final String RK_INTERESSE_PROMOCAO = "interesse.promocao";
+    public static final String RK_PAGAMENTO_PENDENTE = "pagamento.pendente";
     public static final String RK_PAGAMENTO_APROVADO = "pagamento.aprovado";
     public static final String RK_PAGAMENTO_RECUSADO = "pagamento.recusado";
     public static final String RK_PEDIDO_ENVIADO = "pedido.enviado";
@@ -60,12 +61,12 @@ public final class RabbitConfig {
         switch (routingKey) {
             case RK_PEDIDO_CRIADO:
             case RK_PEDIDO_EXCLUIDO:
-            case RK_ESTOQUE_CONSULTAR:
+            case RK_INTERESSE_PROMOCAO:
                 return MS_PRINCIPAL;
             case RK_PEDIDO_ESTOQUE_OK:
             case RK_ESTOQUE_INDISPONIVEL:
-            case RK_ESTOQUE_ATUALIZADO:
                 return MS_ESTOQUE;
+            case RK_PAGAMENTO_PENDENTE:
             case RK_PAGAMENTO_APROVADO:
             case RK_PAGAMENTO_RECUSADO:
                 return MS_PAGAMENTO;
@@ -76,10 +77,11 @@ public final class RabbitConfig {
         }
     }
 
-    public static final String RABBIT_HOST = System.getProperty("rabbit.host", "localhost");
-    public static final int RABBIT_PORT = Integer.parseInt(System.getProperty("rabbit.port", "5672"));
-    public static final String RABBIT_USER = System.getProperty("rabbit.user", "guest");
-    public static final String RABBIT_PASS = System.getProperty("rabbit.pass", "guest");
+    // system property (-Drabbit.port=...) > variável de ambiente / .env (RABBIT_PORT=...) > padrão
+    public static final String RABBIT_HOST = System.getProperty("rabbit.host", Ambiente.get("RABBIT_HOST", "localhost"));
+    public static final int RABBIT_PORT = Integer.parseInt(System.getProperty("rabbit.port", Ambiente.get("RABBIT_PORT", "5672")));
+    public static final String RABBIT_USER = System.getProperty("rabbit.user", Ambiente.get("RABBIT_USER", "guest"));
+    public static final String RABBIT_PASS = System.getProperty("rabbit.pass", Ambiente.get("RABBIT_PASS", "guest"));
 
     public static Connection newConnection() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();

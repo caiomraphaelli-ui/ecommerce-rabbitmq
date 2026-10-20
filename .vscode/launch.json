@@ -3,7 +3,7 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Attach: Principal (5005)",
+            "name": "Attach: Principal / API Gateway (5005)",
             "request": "attach",
             "hostName": "localhost",
             "port": 5005,
@@ -56,19 +56,28 @@
             "hostName": "localhost",
             "port": 5011,
             "projectName": "ecommerce-rabbitmq"
+        },
+        {
+            "type": "java",
+            "name": "Attach: Mock de Pagamento (5012)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5012,
+            "projectName": "ecommerce-rabbitmq"
         }
     ],
     "compounds": [
         {
             "name": "Attach: TODOS os processos",
             "configurations": [
-                "Attach: Principal (5005)",
+                "Attach: Principal / API Gateway (5005)",
                 "Attach: Estoque (5006)",
                 "Attach: Pagamento (5007)",
                 "Attach: Entrega (5008)",
                 "Attach: Promoções (5009)",
                 "Attach: Consumidor C1 (5010)",
-                "Attach: Consumidor C2 (5011)"
+                "Attach: Consumidor C2 (5011)",
+                "Attach: Mock de Pagamento (5012)"
             ]
         }
     ]

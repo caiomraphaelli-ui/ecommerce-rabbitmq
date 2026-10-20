@@ -1,5 +1,5 @@
 #!/bin/bash
-# Executa o Microsserviço principal
+# Executa o MS Principal / API Gateway (REST + SSE em http://localhost:8080)
 set -e
 cd "$(dirname "$0")/.."
 CP="target/classes:target/dependency/*"

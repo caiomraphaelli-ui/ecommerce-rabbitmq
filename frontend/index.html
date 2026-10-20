@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loja SD</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b3df5' stroke-width='2'><path d='M6 7h12l-1 13H7L6 7z'/><path d='M9 7a3 3 0 0 1 6 0'/></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="#catalogo" data-aba="catalogo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        Loja SD
+      </a>
+
+      <nav class="abas" aria-label="Seções">
+        <button class="aba ativa" data-aba="catalogo">Catálogo</button>
+        <button class="aba" data-aba="pedidos">Meus pedidos <span class="contador oculto" id="contadorPedidos">0</span></button>
+        <button class="aba" data-aba="promocoes">Promoções</button>
+      </nav>
+
+      <div class="topo-acoes">
+        <span class="conexao" id="conexao" title="Conexão SSE com o API Gateway">
+          <span class="ponto"></span><span class="rotulo">Conectando…</span>
+        </span>
+        <button class="botao-carrinho" id="abrirCarrinho" aria-label="Abrir carrinho">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.1a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L21 8H6"/></svg>
+          <span class="contador oculto" id="contadorCarrinho">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="pagina">
+    <!-- Catálogo -->
+    <section class="secao" id="secao-catalogo">
+      <div class="secao-cabecalho">
+        <div>
+          <h1>Catálogo</h1>
+          <p class="subtitulo">Produtos disponíveis em estoque, consultados no MS Estoque pelo API Gateway.</p>
+        </div>
+        <button class="botao secundario" id="recarregarProdutos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+          Atualizar
+        </button>
+      </div>
+      <div class="filtros" id="filtros" role="tablist" aria-label="Filtrar por categoria"></div>
+      <div class="grade" id="gradeProdutos" aria-live="polite"></div>
+    </section>
+
+    <!-- Pedidos -->
+    <section class="secao oculto" id="secao-pedidos">
+      <div class="secao-cabecalho">
+        <div>
+          <h1>Meus pedidos</h1>
+          <p class="subtitulo">O status muda sozinho: cada etapa chega por SSE assim que o evento passa pelo RabbitMQ.</p>
+        </div>
+      </div>
+      <div class="pedidos-layout">
+        <div class="lista-pedidos" id="listaPedidos"></div>
+        <aside class="painel-feed">
+          <h2>Notificações em tempo real</h2>
+          <ol class="feed" id="feed"></ol>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Promoções -->
+    <section class="secao oculto" id="secao-promocoes">
+      <div class="secao-cabecalho">
+        <div>
+          <h1>Promoções por e-mail</h1>
+          <p class="subtitulo">Cadastre seu e-mail e escolha as categorias. O MS Promoções envia as ofertas pela API de e-mail (Resend).</p>
+        </div>
+      </div>
+      <form class="cartao formulario" id="formInteresse" novalidate>
+        <label class="campo">
+          <span>E-mail</span>
+          <input type="email" id="emailInteresse" placeholder="voce@exemplo.com" autocomplete="email" required>
+        </label>
+        <fieldset class="campo">
+          <legend>Categorias de interesse</legend>
+          <div class="opcoes-categoria" id="opcoesCategoria"></div>
+        </fieldset>
+        <div class="acoes-formulario">
+          <button type="submit" class="botao primario" id="btnInscrever">Quero receber promoções</button>
+          <button type="button" class="botao perigo-contorno" id="btnCancelarInteresse">Cancelar inscrição</button>
+        </div>
+        <p class="mensagem-form" id="mensagemInteresse" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- Carrinho -->
+  <div class="veu oculto" id="veu"></div>
+  <aside class="gaveta" id="gaveta" aria-label="Carrinho" aria-hidden="true">
+    <div class="gaveta-cabecalho">
+      <h2>Carrinho</h2>
+      <button class="botao-icone" id="fecharCarrinho" aria-label="Fechar carrinho">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <ul class="itens-carrinho" id="itensCarrinho"></ul>
+    <div class="gaveta-rodape">
+      <div class="total"><span>Total estimado</span><strong id="totalCarrinho">R$ 0,00</strong></div>
+      <button class="botao primario largo" id="finalizarPedido" disabled>Finalizar pedido</button>
+      <p class="dica">Ao finalizar, uma nova aba será aberta com o pagamento assim que o estoque for confirmado.</p>
+    </div>
+  </aside>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

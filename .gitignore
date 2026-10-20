@@ -1,0 +1,5 @@
+# Configuração local (API key do Resend etc.)
+.env
+# Dados persistidos pelos microsserviços em execução
+data/
+logs/

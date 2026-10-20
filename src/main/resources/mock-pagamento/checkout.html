@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PayMock · Checkout</title>
+  <style>
+    :root {
+      --bg: #f3f1fb; --card: #ffffff; --text: #1d1a2e; --muted: #6b6785; --border: #e4e0f2;
+      --brand: #5b3df5; --ok: #138a52; --ok-bg: #e5f6ee; --err: #c7372f; --err-bg: #fcebea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14121d; --card: #1e1b2b; --text: #ece9f7; --muted: #a29dbd; --border: #2f2b42;
+        --brand: #8b74ff; --ok: #4fd08f; --ok-bg: #173126; --err: #ff7a70; --err-bg: #3a1d1b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+      background: var(--bg); color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .card {
+      width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; box-shadow: 0 10px 40px rgba(40, 20, 120, .08);
+    }
+    .marca { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--brand); }
+    .marca svg { width: 22px; height: 22px; }
+    .selo { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); border: 1px solid var(--border);
+      border-radius: 999px; padding: 2px 10px; }
+    h1 { font-size: 15px; font-weight: 500; color: var(--muted); margin: 24px 0 4px; }
+    .valor { font-size: 40px; font-weight: 700; letter-spacing: -.02em; margin: 0; font-variant-numeric: tabular-nums; }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 20px 0 24px; font-size: 14px; }
+    dt { color: var(--muted); }
+    dd { margin: 0; text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+    .botoes { display: grid; gap: 10px; }
+    button {
+      font: inherit; font-weight: 600; border-radius: 10px; padding: 13px 16px; cursor: pointer;
+      border: 1px solid transparent; transition: filter .15s, opacity .15s;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.08); }
+    button:disabled { opacity: .5; cursor: progress; }
+    .aprovar { background: var(--ok); color: #fff; }
+    .recusar { background: transparent; color: var(--err); border-color: var(--err); }
+    .resultado { border-radius: 12px; padding: 16px; font-weight: 600; text-align: center; }
+    .resultado.ok { background: var(--ok-bg); color: var(--ok); }
+    .resultado.erro { background: var(--err-bg); color: var(--err); }
+    .resultado small { display: block; font-weight: 400; margin-top: 4px; color: var(--muted); }
+    .rodape { margin-top: 20px; font-size: 12px; color: var(--muted); text-align: center; }
+    .oculto { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="marca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>
+      </svg>
+      PayMock
+      <span class="selo">Ambiente de testes</span>
+    </div>
+
+    <h1>Total a pagar</h1>
+    <p class="valor" id="valor">—</p>
+
+    <dl>
+      <dt>Pedido</dt><dd id="pedido">—</dd>
+      <dt>Cobrança</dt><dd id="cobranca">{{COBRANCA_ID}}</dd>
+      <dt>Status</dt><dd id="status">—</dd>
+    </dl>
+
+    <div class="botoes" id="botoes">
+      <button class="aprovar" id="btnAprovar">Pagamento Aprovado</button>
+      <button class="recusar" id="btnRecusar">Pagamento Recusado</button>
+    </div>
+    <div class="resultado oculto" id="resultado"></div>
+
+    <p class="rodape">Simulação de provedor externo. Ao clicar, o PayMock envia um Webhook (HTTP POST) para a loja.</p>
+  </main>
+
+  <script>
+    const id = "{{COBRANCA_ID}}";
+    const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    const $ = (sel) => document.getElementById(sel);
+
+    function mostrarResultado(ok, titulo, detalhe) {
+      $("botoes").classList.add("oculto");
+      const r = $("resultado");
+      r.className = "resultado " + (ok ? "ok" : "erro");
+      r.innerHTML = "";
+      r.append(titulo);
+      const small = document.createElement("small");
+      small.textContent = detalhe;
+      r.append(small);
+    }
+
+    function aplicar(c) {
+      $("valor").textContent = brl.format(c.valor);
+      $("pedido").textContent = c.pedidoId;
+      $("status").textContent = c.status;
+      if (c.status === "APROVADO") mostrarResultado(true, "Pagamento aprovado", "Pode fechar esta aba e voltar à loja.");
+      else if (c.status === "RECUSADO") mostrarResultado(false, "Pagamento recusado", "Pode fechar esta aba e voltar à loja.");
+      else if (c.status === "CANCELADO") mostrarResultado(false, "Cobrança cancelada", "O pedido foi cancelado na loja.");
+    }
+
+    async function decidir(decisao) {
+      $("btnAprovar").disabled = $("btnRecusar").disabled = true;
+      try {
+        const resp = await fetch(`/checkout/${id}/${decisao}`, { method: "POST" });
+        const corpo = await resp.json();
+        if (resp.ok) {
+          aplicar(corpo);
+          setTimeout(() => window.close(), 4000);
+        } else if (resp.status === 409) {
+          await carregar();
+          if ($("status").textContent === "PENDENTE") mostrarResultado(false, "Não foi possível pagar", corpo.erro);
+        } else {
+          mostrarResultado(false, "Erro ao processar", corpo.erro || "Tente novamente.");
+          $("botoes").classList.remove("oculto");
+          $("btnAprovar").disabled = $("btnRecusar").disabled = false;
+        }
+      } catch (e) {
+        mostrarResultado(false, "Erro de comunicação", e.message);
+      }
+    }
+
+    async function carregar() {
+      const resp = await fetch(`/api/cobrancas/${id}`);
+      if (!resp.ok) { mostrarResultado(false, "Cobrança não encontrada", id); return; }
+      aplicar(await resp.json());
+    }
+
+    $("btnAprovar").addEventListener("click", () => decidir("aprovar"));
+    $("btnRecusar").addEventListener("click", () => decidir("recusar"));
+    carregar();
+  </script>
+</body>
+</html>
