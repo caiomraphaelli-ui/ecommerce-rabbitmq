@@ -202,7 +202,6 @@ public class PrincipalApp extends ProcessoMensageria {
             quantidades.merge(item.produtoId, item.quantidade, Integer::sum);
         }
 
-        // nome e preço vêm do MS Estoque; quem decide a disponibilidade é ele, via evento
         Map<Integer, ProdutoEstoque> catalogo = consultarEstoque(false).stream()
                 .collect(Collectors.toMap(p -> p.id, p -> p));
         List<Pedido.Item> itens = new ArrayList<>();
