@@ -38,7 +38,7 @@ final class EmailTemplates {
     private static String layout(String conteudo) {
         return "<div style=\"font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f1fb;padding:24px\">"
                 + "<div style=\"max-width:480px;margin:0 auto;background:#ffffff;border-radius:14px;padding:28px;color:#1d1a2e\">"
-                + "<p style=\"margin:0 0 20px;font-weight:700;color:#5b3df5\">Ecommerce BC</p>"
+                + "<p style=\"margin:0 0 20px;font-weight:700;color:#5b3df5\">BC E-commerce</p>"
                 + conteudo
                 + "</div></div>";
     }

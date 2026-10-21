@@ -17,7 +17,7 @@ public class ResendEmail {
 
     public ResendEmail() {
         this.apiKey = Ambiente.get("RESEND_API_KEY");
-        this.remetente = Ambiente.get("RESEND_FROM", "Ecommerce BC <onboarding@resend.dev>");
+        this.remetente = Ambiente.get("RESEND_FROM", "BC E-commerce <onboarding@resend.dev>");
     }
 
     public boolean configurado() {
