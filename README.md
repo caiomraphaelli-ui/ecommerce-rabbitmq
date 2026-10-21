@@ -172,7 +172,7 @@ Copie `.env.example` para `.env` na raiz do projeto:
 
 ```bash
 RESEND_API_KEY=re_xxxxxxxx                     # Resend -> API Keys -> Create API Key
-RESEND_FROM=Loja SD <onboarding@resend.dev>    # remetente de testes do Resend
+RESEND_FROM=Ecommerce BC <onboarding@resend.dev>   # remetente de testes do Resend
 RABBIT_PORT=5672                               # porta AMQP do RabbitMQ no host
 ```
 
