@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/** Conexões SSE abertas pelo frontend, agrupadas por clienteId (cada aba é uma conexão). */
 public class SseHub {
 
     private static final long INTERVALO_HEARTBEAT_S = 15;
@@ -27,7 +26,6 @@ public class SseHub {
     });
 
     public SseHub() {
-        // ": ping" periódico mantém a conexão viva e detecta abas fechadas
         heartbeat.scheduleAtFixedRate(() -> conexoesPorCliente.values()
                         .forEach(conjunto -> conjunto.forEach(c -> c.escrever(": ping\n\n"))),
                 INTERVALO_HEARTBEAT_S, INTERVALO_HEARTBEAT_S, TimeUnit.SECONDS);
