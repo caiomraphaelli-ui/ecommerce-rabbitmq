@@ -13,16 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Mock de Pagamento — sistema EXTERNO que simula um provedor de pagamentos.
- * Não usa o RabbitMQ nem as chaves dos microsserviços: só fala HTTP.
- *
- * POST /api/cobrancas                  cria a cobrança (chamado pelo MS Pagamento) e devolve a URL de checkout
- * GET  /api/cobrancas/{id}             consulta a cobrança (usado pela página de checkout)
- * POST /api/cobrancas/{id}/cancelar    cancela uma cobrança pendente (pedido excluído na loja)
- * GET  /checkout/{id}                  página aberta em nova aba, com os botões Aprovar/Recusar
- * POST /checkout/{id}/{decisao}        decisão do usuário (aprovar/recusar) -> dispara o Webhook
- */
+/** Sistema externo que simula um provedor de pagamentos: só HTTP, sem RabbitMQ nem chaves. */
 public class MockPagamentoApp {
 
     private final Map<String, Cobranca> cobrancas = new ConcurrentHashMap<>();
@@ -122,7 +113,6 @@ public class MockPagamentoApp {
         }
     }
 
-    /** O usuário clicou em Aprovar/Recusar: o provedor notifica a loja chamando o Webhook (HTTP POST). */
     private void decidir(HttpExchange ex, Cobranca cobranca, String status) throws Exception {
         synchronized (cobranca) {
             if (!"PENDENTE".equals(cobranca.status)) {

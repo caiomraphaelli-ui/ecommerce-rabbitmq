@@ -7,12 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Cliente da API externa de e-mail Resend (https://resend.com/docs/api-reference/emails/send-email).
- * Configuração por variáveis de ambiente ou pelo arquivo .env do projeto:
- *   RESEND_API_KEY  chave da API (sem ela, o envio é apenas simulado no log)
- *   RESEND_FROM     remetente (padrão: o remetente de testes onboarding@resend.dev)
- */
+/** Cliente da API de e-mail Resend. Sem RESEND_API_KEY, o envio é só simulado no log. */
 public class ResendEmail {
 
     private static final String URL_API = "https://api.resend.com/emails";
@@ -33,7 +28,6 @@ public class ResendEmail {
         return remetente;
     }
 
-    /** Envia um e-mail. Devolve uma descrição do resultado (id do Resend ou motivo da falha). */
     public String enviar(String destinatario, String assunto, String html) {
         if (!configurado()) {
             return "SIMULADO (defina RESEND_API_KEY para enviar de verdade)";

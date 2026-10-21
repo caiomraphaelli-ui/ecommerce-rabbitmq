@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b3df5' stroke-width='2'><path d='M6 7h12l-1 13H7L6 7z'/><path d='M9 7a3 3 0 0 1 6 0'/></svg>">
   <link rel="stylesheet" href="css/styles.css">
   <script>
-    // aplica o tema salvo antes de desenhar a página (evita piscar o tema errado)
+    // aplica o tema antes de desenhar a página, para não piscar
     (function () {
       var salvo = null;
       try { salvo = localStorage.getItem("lojasd.tema"); } catch (e) {}
@@ -48,7 +48,6 @@
   </header>
 
   <main class="pagina">
-    <!-- Catálogo -->
     <section class="secao" id="secao-catalogo">
       <div class="secao-cabecalho">
         <div>
@@ -64,7 +63,6 @@
       <div class="grade" id="gradeProdutos" aria-live="polite"></div>
     </section>
 
-    <!-- Pedidos -->
     <section class="secao oculto" id="secao-pedidos">
       <div class="secao-cabecalho">
         <div>
@@ -81,7 +79,6 @@
       </div>
     </section>
 
-    <!-- Promoções -->
     <section class="secao oculto" id="secao-promocoes">
       <div class="secao-cabecalho">
         <div>
@@ -107,7 +104,6 @@
     </section>
   </main>
 
-  <!-- Carrinho -->
   <div class="veu oculto" id="veu"></div>
   <aside class="gaveta" id="gaveta" aria-label="Carrinho" aria-hidden="true">
     <div class="gaveta-cabecalho">

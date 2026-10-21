@@ -16,24 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * MS Principal / API Gateway.
- *  - expõe a API REST consumida pelo frontend (e serve os arquivos do frontend);
- *  - transforma as ações do usuário em eventos assinados no RabbitMQ
- *    (pedido.criado, pedido.excluido, interesse.promocao);
- *  - consome os eventos de Estoque, Pagamento e Entrega e repassa cada
- *    mudança de status ao navegador do dono do pedido via SSE;
- *  - consulta a lista de produtos diretamente no MS Estoque, via REST.
- *
- * Endpoints:
- *   GET    /api/produtos                       produtos disponíveis em estoque
- *   POST   /api/pedidos                        cria pedido {clienteId, itens:[{produtoId, quantidade}]}
- *   GET    /api/pedidos?clienteId=...          pedidos do cliente
- *   DELETE /api/pedidos/{id}?clienteId=...     cancela um pedido
- *   POST   /api/promocoes/interesse            registra interesse {email, categorias:["A","B"]}
- *   DELETE /api/promocoes/interesse?email=...  cancela o interesse
- *   GET    /api/eventos?clienteId=...          stream SSE com as notificações dos pedidos
- */
 public class PrincipalApp extends ProcessoMensageria {
 
     private static final Set<String> CATEGORIAS = Set.of("A", "B", "C");
@@ -68,8 +50,6 @@ public class PrincipalApp extends ProcessoMensageria {
         consumir(RabbitConfig.FILA_PRINCIPAL);
         iniciarServidorHttp();
     }
-
-    // ===================== eventos do RabbitMQ -> SSE =====================
 
     private void aoConfirmarEstoque(Payloads.PedidoEstoqueOk evento) {
         Pedido p = pedidos.get(evento.pedidoId);
@@ -126,7 +106,6 @@ public class PrincipalApp extends ProcessoMensageria {
         mudarStatus(p, PedidoStatus.ENVIADO, null, "Pedido enviado! Nota fiscal " + evento.numeroNota);
     }
 
-    /** Atualiza o status do pedido e notifica o dono via SSE. Devolve false se o pedido já estava finalizado. */
     private boolean mudarStatus(Pedido p, PedidoStatus status, String motivo, String mensagem) {
         if (!p.atualizar(status, motivo)) {
             log("Pedido " + p.getId() + " já finalizado (" + p.getStatus() + "); evento " + status + " ignorado.");
@@ -150,8 +129,6 @@ public class PrincipalApp extends ProcessoMensageria {
                 new Payloads.PedidoExcluido(pedidoId, motivo));
     }
 
-    // ===================== API REST =====================
-
     private void iniciarServidorHttp() throws IOException {
         HttpServer servidor = Http.criarServidor(HttpConfig.PORTA_GATEWAY);
         Http.rota(servidor, "/api/produtos", this::rotaProdutos);
@@ -164,13 +141,11 @@ public class PrincipalApp extends ProcessoMensageria {
                 + "  (frontend: http://localhost:" + HttpConfig.PORTA_GATEWAY + "/)");
     }
 
-    /** GET /api/produtos — consulta o MS Estoque via REST. */
     private void rotaProdutos(HttpExchange ex) throws Exception {
         Http.exigirMetodo(ex, "GET");
         Http.responderJson(ex, 200, consultarEstoque(true));
     }
 
-    /** Produto como o MS Estoque o devolve no endpoint REST. */
     private static class ProdutoEstoque {
         int id;
         String nome;
@@ -179,7 +154,6 @@ public class PrincipalApp extends ProcessoMensageria {
         int quantidade;
     }
 
-    /** Busca os produtos no MS Estoque (REST). */
     private List<ProdutoEstoque> consultarEstoque(boolean somenteDisponiveis) throws InterruptedException {
         Http.Resposta resposta;
         try {
@@ -213,7 +187,6 @@ public class PrincipalApp extends ProcessoMensageria {
         List<ItemPedido> itens;
     }
 
-    /** POST /api/pedidos — publica pedido.criado. */
     private void criarPedido(HttpExchange ex) throws Exception {
         NovoPedido req = Http.lerJson(ex, NovoPedido.class);
         String clienteId = exigirClienteId(req.clienteId);
@@ -221,7 +194,6 @@ public class PrincipalApp extends ProcessoMensageria {
             throw new Http.ErroHttp(400, "O pedido precisa ter ao menos um item");
         }
 
-        // soma quantidades repetidas do mesmo produto
         Map<Integer, Integer> quantidades = new LinkedHashMap<>();
         for (ItemPedido item : req.itens) {
             if (item.quantidade <= 0 || item.quantidade > QUANTIDADE_MAXIMA_POR_ITEM) {
@@ -230,7 +202,7 @@ public class PrincipalApp extends ProcessoMensageria {
             quantidades.merge(item.produtoId, item.quantidade, Integer::sum);
         }
 
-        // nome e preço vêm do MS Estoque (REST); a disponibilidade é decidida por ele via evento
+        // nome e preço vêm do MS Estoque; quem decide a disponibilidade é ele, via evento
         Map<Integer, ProdutoEstoque> catalogo = consultarEstoque(false).stream()
                 .collect(Collectors.toMap(p -> p.id, p -> p));
         List<Pedido.Item> itens = new ArrayList<>();
@@ -252,7 +224,6 @@ public class PrincipalApp extends ProcessoMensageria {
         Http.responderJson(ex, 201, pedido.json());
     }
 
-    /** GET /api/pedidos?clienteId=... — pedidos do cliente, mais recentes primeiro. */
     private void listarPedidos(HttpExchange ex) throws IOException {
         String clienteId = exigirClienteId(Http.query(ex).get("clienteId"));
         List<JsonElement> lista = pedidos.values().stream()
@@ -263,7 +234,6 @@ public class PrincipalApp extends ProcessoMensageria {
         Http.responderJson(ex, 200, lista);
     }
 
-    /** DELETE /api/pedidos/{id}?clienteId=... — publica pedido.excluido. */
     private void cancelarPedido(HttpExchange ex, String pedidoId) throws IOException {
         String clienteId = exigirClienteId(Http.query(ex).get("clienteId"));
         Pedido p = pedidos.get(pedidoId);
@@ -283,7 +253,6 @@ public class PrincipalApp extends ProcessoMensageria {
         List<String> categorias;
     }
 
-    /** POST/DELETE /api/promocoes/interesse — publica interesse.promocao. */
     private void rotaInteresse(HttpExchange ex) throws Exception {
         Http.exigirMetodo(ex, "POST", "DELETE");
         Map<String, Object> resposta = new LinkedHashMap<>();
@@ -313,7 +282,6 @@ public class PrincipalApp extends ProcessoMensageria {
         Http.responderJson(ex, 202, resposta);
     }
 
-    /** GET /api/eventos?clienteId=... — conexão SSE. */
     private void rotaEventos(HttpExchange ex) throws Exception {
         Http.exigirMetodo(ex, "GET");
         sse.abrir(ex, exigirClienteId(Http.query(ex).get("clienteId")));
@@ -334,8 +302,6 @@ public class PrincipalApp extends ProcessoMensageria {
         return normalizado;
     }
 
-    // ===================== arquivos do frontend =====================
-
     private static final Map<String, String> TIPOS = Map.of(
             "html", "text/html; charset=utf-8",
             "css", "text/css; charset=utf-8",
@@ -345,7 +311,6 @@ public class PrincipalApp extends ProcessoMensageria {
             "ico", "image/x-icon",
             "json", "application/json");
 
-    /** Serve os arquivos estáticos (HTML/CSS/JS) da pasta frontend/. */
     private void rotaFrontend(HttpExchange ex) throws IOException {
         Http.exigirMetodo(ex, "GET");
         Path raiz = Paths.get(HttpConfig.PASTA_FRONTEND).toAbsolutePath().normalize();

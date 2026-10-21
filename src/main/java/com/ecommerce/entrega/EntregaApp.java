@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class EntregaApp extends ProcessoMensageria {
 
-    // tempo simulado de emissão da nota e despacho (deixa a etapa visível no frontend)
+    // tempo simulado de emissão da nota e despacho
     private static final long TEMPO_DESPACHO_MS = Long.parseLong(System.getProperty("entrega.tempo.ms", "3000"));
 
     public EntregaApp() throws Exception {

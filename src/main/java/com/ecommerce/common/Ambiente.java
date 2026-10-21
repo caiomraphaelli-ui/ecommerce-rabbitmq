@@ -8,12 +8,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Configurações vindas de variáveis de ambiente ou do arquivo .env na pasta do
- * projeto (formato CHAVE=valor, uma por linha). A variável de ambiente tem
- * prioridade. Assim a API key do Resend e a porta do RabbitMQ funcionam do
- * mesmo jeito pelos scripts, pela IDE ou pelo terminal.
- */
+/** Configurações de variáveis de ambiente ou do arquivo .env (a variável de ambiente tem prioridade). */
 public final class Ambiente {
 
     private static final Map<String, String> ARQUIVO_ENV = carregarEnv(Paths.get(".env"));
@@ -21,7 +16,6 @@ public final class Ambiente {
     private Ambiente() {
     }
 
-    /** Valor da configuração, ou null se não estiver definida (ou estiver vazia). */
     public static String get(String chave) {
         String valor = System.getenv(chave);
         if (valor == null || valor.isBlank()) {

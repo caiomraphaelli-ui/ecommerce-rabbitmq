@@ -7,7 +7,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** HTML dos e-mails enviados pelo MS Promoções. */
 final class EmailTemplates {
 
     private EmailTemplates() {

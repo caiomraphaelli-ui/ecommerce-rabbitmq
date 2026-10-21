@@ -1,16 +1,12 @@
-// Comunicação com o MS Principal / API Gateway: REST (fetch) e SSE (EventSource).
-
-// Servido pelo próprio Gateway, usa a mesma origem; aberto como arquivo, aponta para localhost:8080.
 const API_BASE = window.location.protocol === "file:" ? "http://localhost:8080" : "";
 
-// Identifica este navegador para o Gateway (os pedidos e as notificações SSE são por cliente).
 const CLIENTE_ID = (() => {
   const CHAVE = "lojasd.clienteId";
   let id = null;
-  try { id = localStorage.getItem(CHAVE); } catch (e) { /* armazenamento indisponível */ }
+  try { id = localStorage.getItem(CHAVE); } catch (e) {}
   if (!id) {
     id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
-    try { localStorage.setItem(CHAVE, id); } catch (e) { /* segue só nesta sessão */ }
+    try { localStorage.setItem(CHAVE, id); } catch (e) {}
   }
   return id;
 })();
@@ -53,10 +49,6 @@ const api = {
 
   cancelarInteresse: (email) => requisicao("DELETE", `/api/promocoes/interesse?email=${encodeURIComponent(email)}`),
 
-  /**
-   * Abre a conexão SSE. O EventSource reconecta sozinho se a conexão cair
-   * (o Gateway manda "retry: 3000"), então só repassamos os estados.
-   */
   conectarEventos({ aoAbrir, aoErro, aoPedido }) {
     const fonte = new EventSource(`${API_BASE}/api/eventos?clienteId=${encodeURIComponent(CLIENTE_ID)}`);
     fonte.addEventListener("open", aoAbrir);

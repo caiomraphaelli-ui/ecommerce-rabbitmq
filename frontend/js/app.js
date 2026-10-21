@@ -1,12 +1,9 @@
-// Interface da loja: catálogo, carrinho, pedidos (acompanhados por SSE) e inscrição em promoções.
-
 const CATEGORIAS = {
   A: { nome: "Informática", icone: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>' },
   B: { nome: "Moda", icone: '<path d="M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 0 1-8 0z"/>' },
   C: { nome: "Variedades", icone: '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13M12 8s-2-5-4.5-3.5S9 8 12 8zm0 0s2-5 4.5-3.5S15 8 12 8z"/>' },
 };
 
-// Etapas da linha do tempo de um pedido, na ordem do fluxo de eventos.
 const ETAPAS = [
   { status: "CRIADO", rotulo: "Criado" },
   { status: "ESTOQUE_CONFIRMADO", rotulo: "Estoque confirmado" },
@@ -36,12 +33,10 @@ const $ = (id) => document.getElementById(id);
 const estado = {
   produtos: [],
   filtro: "todas",
-  carrinho: lerArmazenado("lojasd.carrinho", {}), // produtoId -> quantidade
+  carrinho: lerArmazenado("lojasd.carrinho", {}),
   pedidos: new Map(),
-  abasPagamento: new Map(), // pedidoId -> aba aberta no clique de "Finalizar" (aguardando a URL do checkout)
+  abasPagamento: new Map(),
 };
-
-// ---------------------------------------------------------------- utilidades
 
 function lerArmazenado(chave, padrao) {
   try {
@@ -53,7 +48,7 @@ function lerArmazenado(chave, padrao) {
 }
 
 function salvarArmazenado(chave, valor) {
-  try { localStorage.setItem(chave, JSON.stringify(valor)); } catch (e) { /* ignora */ }
+  try { localStorage.setItem(chave, JSON.stringify(valor)); } catch (e) {}
 }
 
 function esc(texto) {
@@ -84,13 +79,10 @@ function toast({ titulo, texto = "", tipo = "", acao = null, duracao = 4500 }) {
   setTimeout(fechar, acao ? duracao * 2 : duracao);
 }
 
-// ---------------------------------------------------------------- tema claro/escuro
-
-// Sem escolha salva, segue o tema do sistema; o botão fixa claro ou escuro.
 function aplicarTema(tema) {
   document.documentElement.dataset.theme = tema;
   document.documentElement.dataset.temaAtual = tema;
-  try { localStorage.setItem("lojasd.tema", tema); } catch (e) { /* ignora */ }
+  try { localStorage.setItem("lojasd.tema", tema); } catch (e) {}
 }
 
 $("alternarTema").addEventListener("click", () =>
@@ -99,8 +91,6 @@ $("alternarTema").addEventListener("click", () =>
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
   if (!document.documentElement.dataset.theme) document.documentElement.dataset.temaAtual = e.matches ? "dark" : "light";
 });
-
-// ---------------------------------------------------------------- navegação
 
 function mostrarAba(nome) {
   if (!["catalogo", "pedidos", "promocoes"].includes(nome)) nome = "catalogo";
@@ -112,8 +102,6 @@ function mostrarAba(nome) {
 document.querySelectorAll("[data-aba]").forEach((el) =>
   el.addEventListener("click", (e) => { e.preventDefault(); mostrarAba(el.dataset.aba); }));
 window.addEventListener("hashchange", () => mostrarAba(location.hash.slice(1)));
-
-// ---------------------------------------------------------------- catálogo
 
 function renderFiltros() {
   const opcoes = [["todas", "Todas"], ...Object.entries(CATEGORIAS).map(([c, info]) => [c, `${c} · ${info.nome}`])];
@@ -188,8 +176,6 @@ $("gradeProdutos").addEventListener("click", (e) => {
 
 $("recarregarProdutos").addEventListener("click", () => carregarProdutos());
 
-// ---------------------------------------------------------------- carrinho
-
 function produtoPorId(id) {
   return estado.produtos.find((p) => p.id === Number(id));
 }
@@ -262,10 +248,8 @@ $("fecharCarrinho").addEventListener("click", () => abrirCarrinho(false));
 $("veu").addEventListener("click", () => abrirCarrinho(false));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") abrirCarrinho(false); });
 
-// ---------------------------------------------------------------- pagamento em nova aba
-
-// A URL do checkout só chega depois (evento pagamento.pendente -> SSE). Para o navegador não
-// bloquear o pop-up, a aba é aberta já no clique de "Finalizar" e redirecionada quando a URL chegar.
+// A URL do checkout só chega depois, via SSE. A aba é aberta já no clique de "Finalizar"
+// (senão o navegador bloqueia o pop-up) e redirecionada quando a URL chegar.
 function abrirAbaDeEspera() {
   const aba = window.open("", "_blank");
   if (!aba) return null;
@@ -281,14 +265,13 @@ function mensagemNaAba(aba, texto) {
   try {
     aba.document.getElementById("msg").textContent = texto;
     aba.document.title = "Pedido não pode ser pago";
-  } catch (e) { /* a aba já navegou */ }
+  } catch (e) {}
 }
 
 function abrirCheckout(url) {
   if (!window.open(url, "_blank")) toast({ titulo: "Pop-up bloqueado", texto: "Permita pop-ups para abrir o pagamento.", tipo: "erro" });
 }
 
-/** Leva a aba de espera do pedido ao checkout (ou avisa que o pedido falhou). */
 function atualizarAbaPagamento(pedido) {
   const aba = estado.abasPagamento.get(pedido.id);
   if (!aba) return false;
@@ -334,9 +317,6 @@ $("finalizarPedido").addEventListener("click", async () => {
   }
 });
 
-// ---------------------------------------------------------------- pedidos
-
-/** Guarda o pedido e redesenha; não deixa uma resposta antiga sobrescrever um status mais novo. */
 function registrarPedido(pedido, destacar = true) {
   const atual = estado.pedidos.get(pedido.id);
   if (atual && atual.historico.length > pedido.historico.length) return;
@@ -348,7 +328,6 @@ function etapasDoPedido(p) {
   const indice = (status) => ETAPAS.findIndex((e) => e.status === status);
   let feitas, falhou = -1;
   if (FINALIZADOS.includes(p.status) && p.status !== "ENVIADO") {
-    // última etapa alcançada antes do cancelamento; a seguinte é a que falhou
     const alcancadas = p.historico.map((h) => indice(h.status)).filter((i) => i >= 0);
     feitas = Math.max(...alcancadas);
     if (p.status === "PAGAMENTO_RECUSADO") feitas = Math.max(feitas, indice("AGUARDANDO_PAGAMENTO"));
@@ -431,10 +410,8 @@ async function sincronizarPedidos() {
   try {
     (await api.listarPedidos()).forEach((p) => registrarPedido(p, false));
     renderPedidos();
-  } catch (e) { /* o Gateway pode estar fora; o SSE reconecta e tenta de novo */ }
+  } catch (e) {}
 }
-
-// ---------------------------------------------------------------- SSE
 
 function adicionarAoFeed({ tipo, mensagem }) {
   const classe = ["ENVIADO", "PAGAMENTO_APROVADO", "ESTOQUE_CONFIRMADO"].includes(tipo) ? "ok"
@@ -466,7 +443,6 @@ function aoNotificacaoPedido(notificacao) {
     toast({ titulo: `Pedido ${pedido.id}: ${titulo}`, texto: detalhe.toLowerCase() === titulo.toLowerCase() ? "" : detalhe, tipo });
   }
 
-  // reserva e devolução mudam o estoque: atualiza o catálogo
   if (["ESTOQUE_CONFIRMADO", "CANCELADO_ESTOQUE", "PAGAMENTO_RECUSADO", "CANCELADO_USUARIO"].includes(notificacao.tipo)) {
     setTimeout(() => carregarProdutos({ silencioso: true }), 400);
   }
@@ -480,13 +456,11 @@ function estadoConexao(classe, rotulo) {
 api.conectarEventos({
   aoAbrir: () => {
     estadoConexao("online", "Tempo real");
-    sincronizarPedidos(); // recupera mudanças que possam ter ocorrido enquanto estava desconectado
+    sincronizarPedidos();
   },
   aoErro: () => estadoConexao("offline", "Reconectando…"),
   aoPedido: aoNotificacaoPedido,
 });
-
-// ---------------------------------------------------------------- promoções
 
 function renderOpcoesCategoria() {
   const salvas = lerArmazenado("lojasd.categorias", []);
@@ -538,8 +512,6 @@ $("btnCancelarInteresse").addEventListener("click", async () => {
     $("btnCancelarInteresse").disabled = false;
   }
 });
-
-// ---------------------------------------------------------------- início
 
 $("feed").innerHTML = '<li class="vazio">As mudanças de status dos seus pedidos aparecem aqui.</li>';
 mostrarAba(location.hash.slice(1));

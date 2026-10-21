@@ -22,11 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-/**
- * Utilitários HTTP sobre o servidor embutido do JDK (com.sun.net.httpserver)
- * e o cliente java.net.http, usados pelo API Gateway, pelo endpoint REST do
- * Estoque, pelo Webhook do Pagamento e pelo Mock de Pagamento.
- */
 public final class Http {
 
     public static final Gson GSON = new GsonBuilder().serializeNulls().create();
@@ -38,13 +33,11 @@ public final class Http {
     private Http() {
     }
 
-    /** Ação de uma rota; exceções viram resposta 500 em JSON. */
     @FunctionalInterface
     public interface Rota {
         void tratar(HttpExchange ex) throws Exception;
     }
 
-    /** Erro esperado de uma rota (validação, recurso inexistente...), devolvido com o status indicado. */
     public static class ErroHttp extends RuntimeException {
         public final int status;
 
@@ -54,14 +47,13 @@ public final class Http {
         }
     }
 
-    /** Cria um servidor HTTP com um pool de threads (conexões SSE ocupam uma thread cada). */
+    // pool de threads: cada conexão SSE ocupa uma thread
     public static HttpServer criarServidor(int porta) throws IOException {
         HttpServer servidor = HttpServer.create(new InetSocketAddress(porta), 0);
         servidor.setExecutor(Executors.newCachedThreadPool());
         return servidor;
     }
 
-    /** Registra uma rota com CORS, resposta a preflight (OPTIONS) e tratamento de erros. */
     public static void rota(HttpServer servidor, String caminho, Rota rota) {
         servidor.createContext(caminho, ex -> {
             try {
@@ -114,7 +106,6 @@ public final class Http {
         }
     }
 
-    /** Lê o corpo da requisição como JSON. Corpo vazio resulta em erro 400. */
     public static <T> T lerJson(HttpExchange ex, Class<T> tipo) throws IOException {
         T valor = GSON.fromJson(lerCorpo(ex), tipo);
         if (valor == null) {
@@ -129,7 +120,6 @@ public final class Http {
         }
     }
 
-    /** Parâmetros da query string (?a=1&b=2), já decodificados. */
     public static Map<String, String> query(HttpExchange ex) {
         Map<String, String> params = new LinkedHashMap<>();
         String raw = ex.getRequestURI().getRawQuery();
@@ -145,7 +135,6 @@ public final class Http {
         return params;
     }
 
-    /** Trecho do caminho depois do contexto: "/api/pedidos/abc" com contexto "/api/pedidos" -> "abc". */
     public static String subcaminho(HttpExchange ex) {
         String contexto = ex.getHttpContext().getPath();
         String caminho = ex.getRequestURI().getPath();
@@ -168,9 +157,6 @@ public final class Http {
         throw new ErroHttp(405, "Método " + ex.getRequestMethod() + " não suportado");
     }
 
-    // ---------- cliente HTTP (chamadas REST para outros serviços) ----------
-
-    /** Resposta de uma chamada REST feita por este processo. */
     public static class Resposta {
         public final int status;
         public final String corpo;

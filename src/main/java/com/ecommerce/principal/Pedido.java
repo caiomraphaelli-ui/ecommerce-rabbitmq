@@ -7,13 +7,9 @@ import com.google.gson.JsonElement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Pedido como o API Gateway o acompanha. É alterado pela thread do RabbitMQ e
- * lido pelas threads HTTP, por isso todo acesso passa por métodos synchronized.
- */
+/** Alterado pela thread do RabbitMQ e lido pelas threads HTTP, por isso o acesso é synchronized. */
 public class Pedido {
 
-    /** Item com nome e preço, para o frontend exibir. */
     public static class Item {
         public final int produtoId;
         public final String nome;
@@ -28,7 +24,6 @@ public class Pedido {
         }
     }
 
-    /** Uma mudança de status, para a linha do tempo do pedido. */
     public static class Etapa {
         public final PedidoStatus status;
         public final String descricao;
@@ -86,11 +81,7 @@ public class Pedido {
         return lista;
     }
 
-    /**
-     * Muda o status e registra a etapa no histórico. Não altera pedidos já
-     * finalizados (ex.: evento atrasado de um pedido cancelado pelo cliente).
-     * Devolve false se a mudança foi ignorada.
-     */
+    /** Não altera pedido já finalizado (ex.: evento atrasado de um pedido cancelado). */
     public synchronized boolean atualizar(PedidoStatus novo, String motivo) {
         if (status != null && status.finalizado) {
             return false;
@@ -104,7 +95,6 @@ public class Pedido {
         return true;
     }
 
-    /** Cancela por pedido do cliente, de forma atômica, só se o status ainda permitir. */
     public synchronized boolean cancelarPeloCliente() {
         return status.cancelavel() && atualizar(PedidoStatus.CANCELADO_USUARIO, "Cancelado pelo cliente");
     }
@@ -121,7 +111,6 @@ public class Pedido {
         this.notaFiscal = notaFiscal;
     }
 
-    /** Cópia consistente em JSON para responder ao frontend (REST ou SSE). */
     public synchronized JsonElement json() {
         return Http.GSON.toJsonTree(this);
     }

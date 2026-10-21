@@ -14,19 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Gerencia as conexões SSE (Server-Sent Events) abertas pelo frontend.
- *
- * Cada aba do navegador abre GET /api/eventos?clienteId=... e a resposta
- * nunca termina: o servidor vai escrevendo eventos no formato do protocolo SSE
- *
- *     event: pedido
- *     data: {"tipo":"PAGAMENTO_APROVADO", ...}
- *     (linha em branco)
- *
- * As conexões ficam agrupadas por cliente, para que cada um receba só as
- * notificações dos seus pedidos (vale para várias abas do mesmo cliente).
- */
+/** Conexões SSE abertas pelo frontend, agrupadas por clienteId (cada aba é uma conexão). */
 public class SseHub {
 
     private static final long INTERVALO_HEARTBEAT_S = 15;
@@ -39,7 +27,7 @@ public class SseHub {
     });
 
     public SseHub() {
-        // comentário SSE periódico: mantém a conexão viva e detecta clientes que fecharam a aba
+        // ": ping" periódico mantém a conexão viva e detecta abas fechadas
         heartbeat.scheduleAtFixedRate(() -> conexoesPorCliente.values()
                         .forEach(conjunto -> conjunto.forEach(c -> c.escrever(": ping\n\n"))),
                 INTERVALO_HEARTBEAT_S, INTERVALO_HEARTBEAT_S, TimeUnit.SECONDS);
@@ -68,11 +56,7 @@ public class SseHub {
         }
     }
 
-    /**
-     * Abre o stream SSE e segura a thread da requisição até o cliente
-     * desconectar (o servidor HTTP usa um pool de threads, então isso não
-     * bloqueia as demais requisições).
-     */
+    /** Segura a thread até o cliente desconectar (o servidor HTTP usa pool de threads). */
     public void abrir(HttpExchange ex, String clienteId) throws IOException, InterruptedException {
         ex.getResponseHeaders().set("Content-Type", "text/event-stream; charset=utf-8");
         ex.getResponseHeaders().set("Cache-Control", "no-cache");
@@ -83,7 +67,7 @@ public class SseHub {
         conexoesPorCliente.computeIfAbsent(clienteId, k -> ConcurrentHashMap.newKeySet()).add(conexao);
         System.out.println("[SSE] Cliente " + clienteId + " conectado (" + total() + " conexão(ões) abertas)");
 
-        // retry: o navegador espera 3s antes de reconectar sozinho se a conexão cair
+        // o navegador reconecta sozinho em 3 s se a conexão cair
         conexao.escrever("retry: 3000\n" + formatar("conectado", Map.of("clienteId", clienteId)));
         try {
             conexao.fechada.await();
@@ -96,7 +80,6 @@ public class SseHub {
         }
     }
 
-    /** Envia um evento para todas as conexões (abas) do cliente. Devolve quantas receberam. */
     public int enviar(String clienteId, String evento, Object dados) {
         Set<Conexao> conjunto = conexoesPorCliente.get(clienteId);
         if (conjunto == null) {
@@ -113,7 +96,6 @@ public class SseHub {
     }
 
     private static String formatar(String evento, Object dados) {
-        // JSON sem quebras de linha cabe em uma única linha "data:"
         return "event: " + evento + "\ndata: " + Http.GSON.toJson(dados) + "\n\n";
     }
 

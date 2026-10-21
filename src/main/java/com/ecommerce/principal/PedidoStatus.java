@@ -11,7 +11,6 @@ public enum PedidoStatus {
     CANCELADO_USUARIO("Cancelado pelo cliente", true);
 
     public final String descricao;
-    /** true quando o pedido não muda mais de status. */
     public final boolean finalizado;
 
     PedidoStatus(String descricao, boolean finalizado) {
@@ -19,7 +18,6 @@ public enum PedidoStatus {
         this.finalizado = finalizado;
     }
 
-    /** O cliente só pode cancelar enquanto o pagamento não foi aprovado. */
     public boolean cancelavel() {
         return this == CRIADO || this == ESTOQUE_CONFIRMADO || this == AGUARDANDO_PAGAMENTO;
     }

@@ -17,7 +17,6 @@ public class EstoqueApp extends ProcessoMensageria {
     private final ArquivoJson arquivo = new ArquivoJson("estoque.json");
     private DadosEstoque dados;
 
-    /** Tudo o que o Estoque persiste: os produtos com a quantidade e as reservas de cada pedido. */
     private static class DadosEstoque {
         Map<Integer, ProdutoEstoque> produtos = new LinkedHashMap<>();
         Map<String, List<ItemPedido>> reservas = new LinkedHashMap<>();
@@ -57,11 +56,7 @@ public class EstoqueApp extends ProcessoMensageria {
         System.out.println("Microsserviço Estoque iniciado. Estoque atual: " + resumoEstoque());
     }
 
-    /**
-     * Endpoint REST consultado pelo API Gateway:
-     * GET /produtos                 -> todos os produtos com a quantidade em estoque
-     * GET /produtos?disponiveis=true -> apenas os que têm quantidade > 0
-     */
+    // GET /produtos e GET /produtos?disponiveis=true (só quantidade > 0)
     private void iniciarServidorRest() throws IOException {
         HttpServer servidor = Http.criarServidor(HttpConfig.PORTA_ESTOQUE);
         Http.rota(servidor, "/produtos", ex -> {

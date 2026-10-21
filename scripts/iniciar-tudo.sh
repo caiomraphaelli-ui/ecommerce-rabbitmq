@@ -1,19 +1,7 @@
 #!/bin/bash
-# Inicia todo o sistema na ordem recomendada:
-#   1. confere se o RabbitMQ está rodando (porta RABBIT_PORT do .env, padrão 5672)
-#   2. compila o projeto (se ainda não foi compilado ou se o código mudou)
-#   3. gera as chaves RSA (se ainda não existirem)
-#   4. inicia em segundo plano o Mock de Pagamento (sistema externo) e os
-#      processos que consomem eventos: Estoque, Pagamento, Entrega, C1 e C2
-#   5. inicia o Promoções e o MS Principal / API Gateway
-#   6. abre o frontend (http://localhost:8080) e mostra o log do Gateway
-# A saída de cada processo vai para logs/<processo>.log
-# (acompanhe com: tail -f logs/estoque.log). Ctrl+C encerra tudo.
-#
-# Uso: ./scripts/iniciar-tudo.sh [debug]
-#   debug: cada processo abre uma porta JDWP para anexar o debugger
-#          (Principal 5005, Estoque 5006, Pagamento 5007, Entrega 5008,
-#           Promoções 5009, C1 5010, C2 5011, Mock 5012)
+# Sobe todos os processos (compila e gera as chaves se preciso) e abre o frontend em http://localhost:8080.
+# Logs em logs/<processo>.log. Ctrl+C encerra tudo.
+# Uso: ./scripts/iniciar-tudo.sh [debug]   (debug: portas JDWP 5005 a 5012)
 set -e
 cd "$(dirname "$0")/.."
 CP="target/classes:target/dependency/*"

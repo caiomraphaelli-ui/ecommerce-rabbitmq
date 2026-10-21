@@ -31,7 +31,6 @@ public final class Catalogo {
         return PRODUTOS.stream().filter(p -> p.id == id).findFirst();
     }
 
-    /** Nome amigável de cada categoria (usado nos e-mails de promoção). */
     public static String nomeCategoria(String categoria) {
         switch (categoria) {
             case "A":

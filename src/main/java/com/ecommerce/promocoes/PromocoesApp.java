@@ -13,14 +13,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * MS Promoções:
- *  - consome interesse.promocao (inscrição/cancelamento de e-mails por categoria)
- *    e persiste os interessados em data/interessados.json;
- *  - gera promoções aleatórias periodicamente, publica cada uma na exchange
- *    Promoções (promocao.categoria.X, consumida por C1/C2) e envia e-mail
- *    pela API externa (Resend) para os interessados naquela categoria.
- */
 public class PromocoesApp extends ProcessoMensageria {
 
     private static final int[] DESCONTOS_POSSIVEIS = {10, 15, 20, 25, 30, 40};
@@ -30,7 +22,7 @@ public class PromocoesApp extends ProcessoMensageria {
     private final ArquivoJson arquivo = new ArquivoJson("interessados.json");
     private final ResendEmail email = new ResendEmail();
 
-    /** e-mail -> categorias de interesse */
+    // e-mail -> categorias de interesse
     private Map<String, Set<String>> interessados;
 
     public PromocoesApp() throws Exception {

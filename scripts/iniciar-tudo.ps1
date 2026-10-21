@@ -1,17 +1,6 @@
-﻿# Inicia todo o sistema na ordem recomendada:
-#   1. confere se o RabbitMQ está rodando (porta RABBIT_PORT do .env, padrão 5672)
-#   2. compila o projeto (se ainda não foi compilado ou se o código mudou)
-#   3. gera as chaves RSA (se ainda não existirem)
-#   4. abre uma janela para o Mock de Pagamento (sistema externo) e para cada
-#      processo que consome eventos: Estoque, Pagamento, Entrega, C1 e C2
-#   5. abre as janelas do Promoções e do MS Principal / API Gateway
-#   6. abre o frontend (http://localhost:8080) no navegador
-# Pressione ENTER neste terminal para encerrar todas as janelas.
-#
-# Uso: powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo.ps1 [-Depurar]
-#   -Depurar: cada processo abre uma porta JDWP para anexar o debugger
-#             (Principal 5005, Estoque 5006, Pagamento 5007, Entrega 5008,
-#              Promoções 5009, C1 5010, C2 5011, Mock 5012)
+﻿# Sobe todos os processos, cada um em uma janela (compila e gera as chaves se preciso), e abre o frontend.
+# ENTER neste terminal encerra tudo.
+# Uso: powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo.ps1 [-Depurar]   (portas JDWP 5005 a 5012)
 param([switch]$Depurar)
 
 $pastaScripts = $PSScriptRoot

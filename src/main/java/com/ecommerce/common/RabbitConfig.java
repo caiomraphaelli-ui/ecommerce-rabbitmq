@@ -77,7 +77,6 @@ public final class RabbitConfig {
         }
     }
 
-    // system property (-Drabbit.port=...) > variável de ambiente / .env (RABBIT_PORT=...) > padrão
     public static final String RABBIT_HOST = System.getProperty("rabbit.host", Ambiente.get("RABBIT_HOST", "localhost"));
     public static final int RABBIT_PORT = Integer.parseInt(System.getProperty("rabbit.port", Ambiente.get("RABBIT_PORT", "5672")));
     public static final String RABBIT_USER = System.getProperty("rabbit.user", Ambiente.get("RABBIT_USER", "guest"));

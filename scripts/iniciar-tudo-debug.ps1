@@ -1,18 +1,3 @@
-﻿# Inicia todo o sistema em modo DEBUG: cada processo abre sua própria porta
-# JDWP (suspend=n, já começa rodando) para anexar o debugger a qualquer momento
-# (VS Code: configurações "Attach: ..." em .vscode/launch.json).
-#
-# Portas de debug:
-#   Principal........ 5005
-#   Estoque.......... 5006
-#   Pagamento........ 5007
-#   Entrega.......... 5008
-#   Promoções........ 5009
-#   Consumidor C1..... 5010
-#   Consumidor C2..... 5011
-#   Mock Pagamento.... 5012
-#
-# Fora isso, o comportamento é o mesmo do iniciar-tudo.ps1.
-#
-# Uso: powershell -ExecutionPolicy Bypass -File scripts\iniciar-tudo-debug.ps1
+﻿# Igual ao iniciar-tudo.ps1, com uma porta JDWP por processo para anexar o debugger:
+# Principal 5005, Estoque 5006, Pagamento 5007, Entrega 5008, Promoções 5009, C1 5010, C2 5011, Mock 5012.
 & (Join-Path $PSScriptRoot "iniciar-tudo.ps1") -Depurar

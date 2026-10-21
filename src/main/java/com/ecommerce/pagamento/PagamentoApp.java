@@ -10,21 +10,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * MS Pagamento: ao receber pedido.estoque_ok, solicita ao provedor de pagamento
- * (Mock de Pagamento, via REST) a criação de uma cobrança, informando a URL do
- * seu Webhook. A URL de checkout devolvida pelo provedor é publicada no evento
- * pagamento.pendente (o Gateway a repassa ao frontend via SSE). Quando o
- * usuário decide no checkout, o provedor chama o Webhook com APROVADO ou
- * RECUSADO e o serviço publica pagamento.aprovado ou pagamento.recusado.
- */
 public class PagamentoApp extends ProcessoMensageria {
 
     private final Map<String, Cobranca> cobrancasPorPedido = new ConcurrentHashMap<>();
-    // pedidos excluídos antes de a cobrança existir (o pedido.excluido pode chegar antes do pedido.estoque_ok)
+    // o pedido.excluido pode chegar antes do pedido.estoque_ok
     private final Set<String> pedidosExcluidos = ConcurrentHashMap.newKeySet();
 
-    /** Estado de uma cobrança do ponto de vista do MS Pagamento. */
     private static class Cobranca {
         final String pedidoId;
         final String cobrancaId;
@@ -38,7 +29,6 @@ public class PagamentoApp extends ProcessoMensageria {
         }
     }
 
-    /** Corpo enviado ao provedor para criar a cobrança. */
     private static class SolicitacaoCobranca {
         String pedidoId;
         double valor;
@@ -51,13 +41,11 @@ public class PagamentoApp extends ProcessoMensageria {
         }
     }
 
-    /** Resposta do provedor ao criar a cobrança. */
     private static class CobrancaCriada {
         String cobrancaId;
         String checkoutUrl;
     }
 
-    /** Corpo do Webhook enviado pelo provedor. */
     private static class NotificacaoWebhook {
         String cobrancaId;
         String pedidoId;
@@ -118,7 +106,6 @@ public class PagamentoApp extends ProcessoMensageria {
                 new Payloads.PagamentoPendente(pedidoId, pedido.valorTotal, criada.checkoutUrl));
     }
 
-    /** Pedido excluído antes do pagamento: a cobrança pendente é cancelada (aqui e no provedor). */
     private void cancelarCobranca(Payloads.PedidoExcluido evento) {
         Cobranca cobranca = cobrancasPorPedido.get(evento.pedidoId);
         if (cobranca == null) {
@@ -139,7 +126,6 @@ public class PagamentoApp extends ProcessoMensageria {
         }
     }
 
-    /** POST /webhook/pagamento — chamado pelo provedor com o status APROVADO ou RECUSADO. */
     private void iniciarServidorWebhook() throws IOException {
         HttpServer servidor = Http.criarServidor(HttpConfig.PORTA_PAGAMENTO);
         Http.rota(servidor, "/webhook/pagamento", ex -> {

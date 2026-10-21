@@ -60,7 +60,7 @@ public final class Payloads {
 
         public String acao;
         public String email;
-        public List<String> categorias; // vazio quando acao = CANCELAR
+        public List<String> categorias;
 
         public InteressePromocao(String acao, String email, List<String> categorias) {
             this.acao = acao;
@@ -69,7 +69,7 @@ public final class Payloads {
         }
     }
 
-    /** Publicado pelo MS Pagamento na routing key pagamento.pendente (cobrança criada no provedor) */
+    /** Publicado pelo MS Pagamento na routing key pagamento.pendente */
     public static class PagamentoPendente {
         public String pedidoId;
         public double valorTotal;

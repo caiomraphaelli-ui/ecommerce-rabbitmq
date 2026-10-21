@@ -2,7 +2,6 @@ package com.ecommerce.estoque;
 
 import com.ecommerce.common.Produto;
 
-/** Produto do catálogo com a quantidade disponível, como é persistido e exposto pelo Estoque. */
 public class ProdutoEstoque {
     public int id;
     public String nome;
