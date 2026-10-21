@@ -218,7 +218,7 @@ function renderCarrinho() {
       <li class="item-carrinho">
         <div><div class="nome">${esc(p ? p.nome : `Produto ${id}`)}</div><div class="preco">${p ? brl.format(preco) : "indisponível no catálogo"}</div></div>
         <div class="subtotal">${brl.format(preco * qtd)}</div>
-        ${semEstoque ? `<div class="aviso-estoque">Só ${p.quantidade} em estoque: o MS Estoque vai recusar este pedido.</div>` : ""}
+        ${semEstoque ? `<div class="aviso-estoque">Só ${p.quantidade} em estoque: ajuste a quantidade ou o pedido será recusado.</div>` : ""}
         ${!p ? '<div class="aviso-estoque">Produto sem estoque no momento: o pedido será recusado.</div>' : ""}
         <div class="controles">
           <div class="qtd">
@@ -256,7 +256,7 @@ function abrirAbaDeEspera() {
   aba.document.write(`<!doctype html><meta charset="utf-8"><title>Preparando pagamento…</title>
     <body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f6f5fb;color:#1d1a2e">
     <div style="text-align:center"><p style="font-size:18px;font-weight:600;margin:0 0 6px">Preparando seu pagamento…</p>
-    <p id="msg" style="color:#5f5a7a;margin:0">Aguardando a confirmação do estoque e a cobrança do provedor.</p></div></body>`);
+    <p id="msg" style="color:#5f5a7a;margin:0">Estamos confirmando seu pedido. Em instantes você será levado ao pagamento.</p></div></body>`);
   aba.document.close();
   return aba;
 }
@@ -306,8 +306,8 @@ $("finalizarPedido").addEventListener("click", async () => {
     }
     abrirCarrinho(false);
     mostrarAba("pedidos");
-    adicionarAoFeed({ tipo: "CRIADO", mensagem: `Pedido ${pedido.id}: criado e publicado em pedido.criado` });
-    toast({ titulo: `Pedido ${pedido.id} criado`, texto: "Acompanhe o status em tempo real." });
+    adicionarAoFeed({ tipo: "CRIADO", mensagem: `Pedido ${pedido.id}: pedido recebido` });
+    toast({ titulo: `Pedido ${pedido.id} criado`, texto: "Acompanhe o andamento em Meus pedidos." });
   } catch (e) {
     if (aba) aba.close();
     toast({ titulo: "Não foi possível criar o pedido", texto: e.message, tipo: "erro" });
@@ -436,7 +436,7 @@ function aoNotificacaoPedido(notificacao) {
   const titulo = (SELOS[notificacao.tipo] || {}).texto || notificacao.tipo;
 
   if (notificacao.tipo === "AGUARDANDO_PAGAMENTO" && !levadoAoCheckout) {
-    toast({ titulo: `Pedido ${pedido.id}: pague para continuar`, texto: "A cobrança foi gerada pelo provedor de pagamento.",
+    toast({ titulo: `Pedido ${pedido.id}: pague para continuar`, texto: "Seu pagamento está pronto para ser concluído.",
       acao: { rotulo: "Abrir pagamento", fn: () => abrirCheckout(pedido.checkoutUrl) } });
   } else {
     const detalhe = notificacao.mensagem.replace(/^Pedido \S+: /, "");

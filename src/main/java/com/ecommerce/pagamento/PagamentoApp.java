@@ -95,7 +95,7 @@ public class PagamentoApp extends ProcessoMensageria {
         if (resposta == null || !resposta.ok()) {
             log("Pedido " + pedidoId + ": não foi possível criar a cobrança. Pagamento RECUSADO.");
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PAGAMENTO_RECUSADO,
-                    new Payloads.PagamentoRecusado(pedidoId, "Provedor de pagamento indisponível"));
+                    new Payloads.PagamentoRecusado(pedidoId, "Não foi possível processar o pagamento"));
             return;
         }
 
@@ -173,7 +173,7 @@ public class PagamentoApp extends ProcessoMensageria {
         } else {
             log("Pedido " + n.pedidoId + ": pagamento RECUSADO.");
             publicar(RabbitConfig.EXCHANGE_ECOMMERCE, RabbitConfig.RK_PAGAMENTO_RECUSADO,
-                    new Payloads.PagamentoRecusado(n.pedidoId, "Pagamento recusado pelo provedor"));
+                    new Payloads.PagamentoRecusado(n.pedidoId, "Pagamento não autorizado"));
         }
         return n.status;
     }

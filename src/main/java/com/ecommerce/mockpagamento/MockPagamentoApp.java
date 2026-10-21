@@ -132,7 +132,7 @@ public class MockPagamentoApp {
                 resposta = Http.postJson(cobranca.webhookUrl, webhook);
             } catch (IOException e) {
                 log("Falha ao chamar o Webhook: " + e.getMessage());
-                throw new Http.ErroHttp(502, "A loja não respondeu ao Webhook. Tente novamente.");
+                throw new Http.ErroHttp(502, "Não foi possível confirmar o pagamento com a loja. Tente novamente.");
             }
             log("Webhook respondeu HTTP " + resposta.status + ": " + resposta.corpo);
 
@@ -141,7 +141,7 @@ public class MockPagamentoApp {
                 throw new Http.ErroHttp(409, "O pedido foi cancelado na loja; a cobrança não pode mais ser paga.");
             }
             if (!resposta.ok()) {
-                throw new Http.ErroHttp(502, "A loja recusou o Webhook (HTTP " + resposta.status + ").");
+                throw new Http.ErroHttp(502, "A loja não confirmou o pagamento. Tente novamente.");
             }
             cobranca.status = status;
         }

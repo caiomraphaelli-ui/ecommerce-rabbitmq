@@ -27,7 +27,7 @@ async function requisicao(metodo, caminho, corpo) {
       body: corpo ? JSON.stringify(corpo) : undefined,
     });
   } catch (e) {
-    throw new ErroApi(0, "Não foi possível falar com o API Gateway. Ele está rodando?");
+    throw new ErroApi(0, "Não foi possível conectar à loja. Tente novamente em instantes.");
   }
   const texto = await resp.text();
   const dados = texto ? JSON.parse(texto) : null;

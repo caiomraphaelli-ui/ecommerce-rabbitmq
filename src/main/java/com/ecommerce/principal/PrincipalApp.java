@@ -76,7 +76,7 @@ public class PrincipalApp extends ProcessoMensageria {
             return;
         }
         p.setCheckoutUrl(evento.checkoutUrl);
-        mudarStatus(p, PedidoStatus.AGUARDANDO_PAGAMENTO, null, "Cobrança gerada, aguardando pagamento");
+        mudarStatus(p, PedidoStatus.AGUARDANDO_PAGAMENTO, null, "Aguardando pagamento");
     }
 
     private void aoAprovarPagamento(Payloads.PagamentoAprovado evento) {
@@ -159,10 +159,10 @@ public class PrincipalApp extends ProcessoMensageria {
         try {
             resposta = Http.get(HttpConfig.URL_ESTOQUE + "/produtos" + (somenteDisponiveis ? "?disponiveis=true" : ""));
         } catch (IOException e) {
-            throw new Http.ErroHttp(503, "MS Estoque indisponível");
+            throw new Http.ErroHttp(503, "Catálogo indisponível no momento. Tente novamente em instantes.");
         }
         if (!resposta.ok()) {
-            throw new Http.ErroHttp(502, "MS Estoque respondeu HTTP " + resposta.status);
+            throw new Http.ErroHttp(502, "Não foi possível consultar o estoque. Tente novamente em instantes.");
         }
         return resposta.comoJson(new TypeToken<List<ProdutoEstoque>>() {}.getType());
     }
@@ -243,7 +243,7 @@ public class PrincipalApp extends ProcessoMensageria {
         if (!p.cancelarPeloCliente()) {
             throw new Http.ErroHttp(409, "Pedido não pode mais ser cancelado (" + p.getStatus().descricao + ")");
         }
-        notificar(p, PedidoStatus.CANCELADO_USUARIO, "Cancelado a seu pedido");
+        notificar(p, PedidoStatus.CANCELADO_USUARIO, "Pedido cancelado");
         publicarPedidoExcluido(pedidoId, "Cancelado pelo cliente");
         Http.responderJson(ex, 200, p.json());
     }

@@ -32,7 +32,7 @@
       </nav>
 
       <div class="topo-acoes">
-        <span class="conexao" id="conexao" title="Conexão SSE com o API Gateway">
+        <span class="conexao" id="conexao" title="Atualização automática dos pedidos">
           <span class="ponto"></span><span class="rotulo">Conectando…</span>
         </span>
         <button class="botao-tema" id="alternarTema" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
@@ -52,7 +52,7 @@
       <div class="secao-cabecalho">
         <div>
           <h1>Catálogo</h1>
-          <p class="subtitulo">Produtos disponíveis em estoque, consultados no MS Estoque pelo API Gateway.</p>
+          <p class="subtitulo">Escolha seus produtos e adicione ao carrinho.</p>
         </div>
         <button class="botao secundario" id="recarregarProdutos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
@@ -67,13 +67,13 @@
       <div class="secao-cabecalho">
         <div>
           <h1>Meus pedidos</h1>
-          <p class="subtitulo">O status muda sozinho: cada etapa chega por SSE assim que o evento passa pelo RabbitMQ.</p>
+          <p class="subtitulo">Acompanhe cada etapa da sua compra. O status é atualizado automaticamente.</p>
         </div>
       </div>
       <div class="pedidos-layout">
         <div class="lista-pedidos" id="listaPedidos"></div>
         <aside class="painel-feed">
-          <h2>Notificações em tempo real</h2>
+          <h2>Atualizações</h2>
           <ol class="feed" id="feed"></ol>
         </aside>
       </div>
@@ -83,7 +83,7 @@
       <div class="secao-cabecalho">
         <div>
           <h1>Promoções por e-mail</h1>
-          <p class="subtitulo">Cadastre seu e-mail e escolha as categorias. O MS Promoções envia as ofertas pela API de e-mail (Resend).</p>
+          <p class="subtitulo">Escolha as categorias que mais combinam com você e receba as ofertas por e-mail.</p>
         </div>
       </div>
       <form class="cartao formulario" id="formInteresse" novalidate>
@@ -116,7 +116,7 @@
     <div class="gaveta-rodape">
       <div class="total"><span>Total estimado</span><strong id="totalCarrinho">R$ 0,00</strong></div>
       <button class="botao primario largo" id="finalizarPedido" disabled>Finalizar pedido</button>
-      <p class="dica">Ao finalizar, uma nova aba será aberta com o pagamento assim que o estoque for confirmado.</p>
+      <p class="dica">Ao finalizar, o pagamento abre em uma nova aba.</p>
     </div>
   </aside>
 
