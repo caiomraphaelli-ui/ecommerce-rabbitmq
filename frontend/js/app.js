@@ -84,6 +84,22 @@ function toast({ titulo, texto = "", tipo = "", acao = null, duracao = 4500 }) {
   setTimeout(fechar, acao ? duracao * 2 : duracao);
 }
 
+// ---------------------------------------------------------------- tema claro/escuro
+
+// Sem escolha salva, segue o tema do sistema; o botão fixa claro ou escuro.
+function aplicarTema(tema) {
+  document.documentElement.dataset.theme = tema;
+  document.documentElement.dataset.temaAtual = tema;
+  try { localStorage.setItem("lojasd.tema", tema); } catch (e) { /* ignora */ }
+}
+
+$("alternarTema").addEventListener("click", () =>
+  aplicarTema(document.documentElement.dataset.temaAtual === "dark" ? "light" : "dark"));
+
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  if (!document.documentElement.dataset.theme) document.documentElement.dataset.temaAtual = e.matches ? "dark" : "light";
+});
+
 // ---------------------------------------------------------------- navegação
 
 function mostrarAba(nome) {
