@@ -27,8 +27,6 @@
     }
     .marca { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--brand); }
     .marca svg { width: 22px; height: 22px; }
-    .selo { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); border: 1px solid var(--border);
-      border-radius: 999px; padding: 2px 10px; }
     h1 { font-size: 15px; font-weight: 500; color: var(--muted); margin: 24px 0 4px; }
     .valor { font-size: 40px; font-weight: 700; letter-spacing: -.02em; margin: 0; font-variant-numeric: tabular-nums; }
     dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 20px 0 24px; font-size: 14px; }
@@ -47,7 +45,6 @@
     .resultado.ok { background: var(--ok-bg); color: var(--ok); }
     .resultado.erro { background: var(--err-bg); color: var(--err); }
     .resultado small { display: block; font-weight: 400; margin-top: 4px; color: var(--muted); }
-    .rodape { margin-top: 20px; font-size: 12px; color: var(--muted); text-align: center; }
     .oculto { display: none; }
   </style>
 </head>
@@ -58,7 +55,6 @@
         <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>
       </svg>
       PayMock
-      <span class="selo">Ambiente de testes</span>
     </div>
 
     <h1>Total a pagar</h1>
@@ -75,8 +71,6 @@
       <button class="recusar" id="btnRecusar">Pagamento Recusado</button>
     </div>
     <div class="resultado oculto" id="resultado"></div>
-
-    <p class="rodape">Simulação de provedor externo. Ao clicar, o PayMock envia um Webhook (HTTP POST) para a loja.</p>
   </main>
 
   <script>
