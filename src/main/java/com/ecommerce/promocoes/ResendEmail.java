@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Cliente da API de e-mail Resend. Sem RESEND_API_KEY, o envio é só simulado no log. */
+/** Cliente da API de e-mail Resend. */
 public class ResendEmail {
 
     private static final String URL_API = "https://api.resend.com/emails";
