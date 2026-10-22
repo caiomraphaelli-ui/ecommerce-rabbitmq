@@ -54,7 +54,6 @@ public class SseHub {
         }
     }
 
-    /** Segura a thread até o cliente desconectar (o servidor HTTP usa pool de threads). */
     public void abrir(HttpExchange ex, String clienteId) throws IOException, InterruptedException {
         ex.getResponseHeaders().set("Content-Type", "text/event-stream; charset=utf-8");
         ex.getResponseHeaders().set("Cache-Control", "no-cache");
